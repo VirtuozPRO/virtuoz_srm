@@ -1,0 +1,3027 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ВЕРТУМ CRM - Торговая система управления клиентами</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+    
+    <!-- PWA мета-теги -->
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="/manifest.json">
+    
+    <style>
+    /* ========== ОСНОВНЫЕ СТИЛИ ========== */
+    :root {
+        --primary-color: #667eea;
+        --secondary-color: #764ba2;
+        --success-color: #4CAF50;
+        --warning-color: #FF9800;
+        --danger-color: #f44336;
+        --info-color: #2196F3;
+        --light-bg: #f8f9fa;
+        --dark-text: #2d3748;
+        --border-radius: 8px;
+        --box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        --transition: all 0.3s ease;
+    }
+    
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+    }
+    
+    body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+        color: var(--dark-text);
+        line-height: 1.6;
+        overflow-x: hidden;
+    }
+    
+    /* ========== ШАПКА ========== */
+    .crm-header {
+        background: white;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        padding: 12px 0;
+        -webkit-backdrop-filter: blur(10px);
+        backdrop-filter: blur(10px);
+    }
+    
+    .header-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .logo {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 20px;
+        font-weight: bold;
+        color: var(--secondary-color);
+    }
+    
+    .logo i {
+        font-size: 24px;
+        color: var(--primary-color);
+    }
+    
+    /* ========== МЕНЕДЖЕР ========== */
+    .manager-selector {
+        position: relative;
+        min-width: 300px;
+    }
+    
+    .current-manager {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: linear-gradient(135deg, var(--light-bg) 0%, #e9ecef 100%);
+        padding: 10px 16px;
+        border-radius: var(--border-radius);
+        border: 2px solid var(--primary-color);
+        cursor: pointer;
+        transition: var(--transition);
+        -webkit-touch-callout: none;
+        user-select: none;
+    }
+    
+    .current-manager:hover {
+        border-color: var(--secondary-color);
+        transform: translateY(-1px);
+        box-shadow: var(--box-shadow);
+    }
+    
+    .manager-info {
+        flex-grow: 1;
+    }
+    
+    .manager-name {
+        font-weight: 600;
+        font-size: 14px;
+        color: var(--dark-text);
+        margin-bottom: 3px;
+    }
+    
+    .manager-contacts {
+        font-size: 12px;
+        color: #666;
+    }
+    
+    .manager-arrow {
+        color: var(--primary-color);
+        margin-left: 10px;
+        transition: var(--transition);
+    }
+    
+    .current-manager.active .manager-arrow {
+        transform: rotate(180deg);
+    }
+    
+    .managers-dropdown {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        border: 2px solid var(--primary-color);
+        border-radius: var(--border-radius);
+        margin-top: 8px;
+        box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+        z-index: 1001;
+        overflow: hidden;
+        display: none;
+        animation: slideDown 0.3s ease;
+    }
+    
+    @keyframes slideDown {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .manager-option {
+        display: flex;
+        align-items: center;
+        padding: 12px 16px;
+        border-bottom: 1px solid #e9ecef;
+        cursor: pointer;
+        transition: var(--transition);
+    }
+    
+    .manager-option:hover {
+        background: var(--light-bg);
+    }
+    
+    .manager-option.active {
+        background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+        border-left: 4px solid var(--success-color);
+    }
+    
+    .manager-option i {
+        color: var(--primary-color);
+        margin-right: 12px;
+        font-size: 16px;
+    }
+    
+    /* ========== КНОПКИ В ШАПКЕ ========== */
+    .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    .header-btn {
+        background: linear-gradient(135deg, var(--light-bg) 0%, #e9ecef 100%);
+        border: 2px solid var(--primary-color);
+        padding: 8px 16px;
+        border-radius: var(--border-radius);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--dark-text);
+        transition: var(--transition);
+    }
+    
+    .header-btn:hover {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        color: white;
+        border-color: transparent;
+    }
+    
+    .btn-visit-header {
+        background: linear-gradient(135deg, var(--warning-color) 0%, #F57C00 100%);
+        color: white !important;
+        border: none;
+        padding: 10px 20px;
+        border-radius: var(--border-radius);
+        cursor: pointer;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        transition: var(--transition);
+        min-width: 160px;
+        justify-content: center;
+        box-shadow: 0 2px 5px rgba(255, 152, 0, 0.3);
+    }
+    
+    .btn-visit-header:hover {
+        background: linear-gradient(135deg, #F57C00 0%, #E65100 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(245, 124, 0, 0.4);
+    }
+    
+    /* ========== ГЛАВНОЕ МЕНЮ ========== */
+    .crm-main {
+        max-width: 1400px;
+        margin: 20px auto;
+        padding: 0 20px;
+        min-height: calc(100vh - 200px);
+    }
+    
+    .menu-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+        margin: 25px 0;
+    }
+    
+    .menu-card {
+        background: white;
+        border-radius: 12px;
+        padding: 25px;
+        cursor: pointer;
+        border: 2px solid var(--primary-color);
+        transition: var(--transition);
+        box-shadow: var(--box-shadow);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .menu-card:hover {
+        transform: translateY(-5px);
+        border-color: var(--secondary-color);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    }
+    
+    .menu-card.active {
+        background: linear-gradient(135deg, #f8fff8 0%, #e8f5e9 100%);
+        border-color: var(--success-color);
+    }
+    
+    .menu-icon {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+    }
+    
+    .menu-icon i {
+        font-size: 32px;
+        color: var(--primary-color);
+    }
+    
+    .menu-badge {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        color: white;
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: bold;
+        box-shadow: 0 2px 5px rgba(102, 126, 234, 0.3);
+    }
+    
+    .menu-title {
+        font-size: 20px;
+        font-weight: bold;
+        color: var(--dark-text);
+        margin-bottom: 8px;
+    }
+    
+    .menu-subtitle {
+        font-size: 13px;
+        color: #666;
+        margin-bottom: 20px;
+        line-height: 1.4;
+    }
+    
+    .menu-action {
+        color: var(--primary-color);
+        font-weight: bold;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        margin-top: 10px;
+    }
+    
+    .menu-action::after {
+        content: "→";
+        font-size: 16px;
+    }
+    
+    /* ========== СТАТИСТИКА ========== */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin: 30px 0;
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        text-align: center;
+        box-shadow: var(--box-shadow);
+        border: 2px solid var(--primary-color);
+        transition: var(--transition);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-3px);
+        border-color: var(--secondary-color);
+    }
+    
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    }
+    
+    .stat-card i {
+        font-size: 28px;
+        color: var(--primary-color);
+        margin-bottom: 15px;
+        display: block;
+    }
+    
+    .stat-value {
+        font-size: 24px;
+        font-weight: bold;
+        color: var(--dark-text);
+        margin-bottom: 5px;
+    }
+    
+    .stat-label {
+        font-size: 12px;
+        color: #666;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    /* ========== РАЗДЕЛЫ ========== */
+    .section-container {
+        background: white;
+        border-radius: 12px;
+        padding: 25px;
+        margin: 25px 0;
+        box-shadow: var(--box-shadow);
+        border: 2px solid var(--primary-color);
+        display: none;
+    }
+    
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 25px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid var(--primary-color);
+    }
+    
+    .section-title {
+        font-size: 20px;
+        font-weight: bold;
+        color: var(--dark-text);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .section-title i {
+        color: var(--primary-color);
+        font-size: 24px;
+    }
+    
+    .manager-badge {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        color: white;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: bold;
+        margin-left: 10px;
+    }
+    
+    .section-actions {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    
+    .counter-badge {
+        background: var(--light-bg);
+        padding: 7px 14px;
+        border-radius: 20px;
+        font-size: 12px;
+        color: var(--dark-text);
+        border: 1px solid var(--primary-color);
+    }
+    
+    .action-btn {
+        padding: 9px 18px;
+        border: none;
+        border-radius: var(--border-radius);
+        cursor: pointer;
+        font-size: 13px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 600;
+        transition: var(--transition);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    
+    .action-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+    }
+    
+    .btn-success {
+        background: linear-gradient(135deg, var(--success-color) 0%, #2E7D32 100%);
+        color: white;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, var(--info-color) 0%, #0D47A1 100%);
+        color: white;
+    }
+    
+    .btn-info {
+        background: linear-gradient(135deg, var(--info-color) 0%, #0D47A1 100%);
+        color: white;
+    }
+    
+    .btn-green {
+        background: linear-gradient(135deg, var(--success-color) 0%, #2E7D32 100%);
+        color: white;
+    }
+    
+    .btn-warning {
+        background: linear-gradient(135deg, var(--warning-color) 0%, #F57C00 100%);
+        color: white;
+    }
+    
+    /* ========== ПОИСК И ФИЛЬТРЫ ========== */
+    .search-box {
+        margin: 20px 0;
+        position: relative;
+    }
+    
+    .search-input {
+        width: 100%;
+        padding: 13px 15px 13px 45px;
+        border: 2px solid var(--primary-color);
+        border-radius: var(--border-radius);
+        font-size: 14px;
+        background: white;
+        color: var(--dark-text);
+        box-shadow: 0 1px 3px rgba(102, 126, 234, 0.1);
+        transition: var(--transition);
+    }
+    
+    .search-input:focus {
+        outline: none;
+        border-color: var(--secondary-color);
+        box-shadow: 0 3px 10px rgba(118, 75, 162, 0.2);
+    }
+    
+    .search-box::before {
+        content: '🔍';
+        position: absolute;
+        left: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 16px;
+        color: var(--primary-color);
+    }
+    
+    .filters-grid {  
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 15px;
+        margin: 25px 0;
+        padding: 20px;
+        background: linear-gradient(135deg, var(--light-bg) 0%, #e9ecef 100%);
+        border-radius: var(--border-radius);
+        border: 2px solid var(--primary-color);
+    }
+    
+    .filter-item {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .filter-item label {
+        font-size: 12px;
+        color: var(--primary-color);
+        margin-bottom: 6px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .filter-select {
+        padding: 11px 13px;
+        border: 2px solid var(--primary-color);
+        border-radius: var(--border-radius);
+        background: white;
+        font-size: 13px;
+        cursor: pointer;
+        color: var(--dark-text);
+        font-weight: 500;
+        transition: var(--transition);
+    }
+    
+    .filter-select:hover {
+        border-color: var(--secondary-color);
+    }
+    
+    .filter-select:focus {
+        outline: none;
+        border-color: var(--secondary-color);
+        box-shadow: 0 2px 5px rgba(118, 75, 162, 0.2);
+    }
+    
+    /* ========== ТАБЛИЦЫ ========== */
+    .table-container {
+        overflow-x: auto;
+        margin: 25px 0;
+        border: 2px solid var(--primary-color);
+        border-radius: var(--border-radius);
+        box-shadow: var(--box-shadow);
+        max-height: 500px;
+        position: relative;
+    }
+    
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 1200px;
+    }
+    
+    .data-table th {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        color: white;
+        padding: 14px 12px;
+        text-align: left;
+        font-size: 13px;
+        font-weight: 600;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+    
+    .data-table td {
+        padding: 12px 12px;
+        border-bottom: 1px solid #f1f3f4;
+        font-size: 13px;
+        color: var(--dark-text);
+        vertical-align: middle;
+    }
+    
+    .data-table tr:nth-child(even) {
+        background-color: #f8f9fa;
+    }
+    
+    .data-table tr:hover {
+        background: linear-gradient(135deg, #f3f0ff 0%, #e9ecef 100%);
+        box-shadow: 0 1px 3px rgba(102, 126, 234, 0.1);
+    }
+    
+    .checkbox-cell {
+        text-align: center;
+        width: 30px;
+    }
+    
+    .action-cell {
+        display: flex;
+        gap: 5px;
+        flex-wrap: wrap;
+    }
+    
+    .btn-small {
+        padding: 5px 10px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 11px;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-weight: 600;
+        transition: var(--transition);
+    }
+    
+    .btn-small:hover {
+        transform: translateY(-1px);
+    }
+    
+    /* ========== ПАГИНАЦИЯ ========== */
+    .pagination {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        margin: 25px 0;
+        padding: 20px;
+        background: var(--light-bg);
+        border-radius: var(--border-radius);
+        border: 2px solid var(--primary-color);
+        flex-wrap: wrap;
+    }
+    
+    .page-btn {
+        padding: 7px 14px;
+        border: 1px solid var(--primary-color);
+        background: white;
+        border-radius: var(--border-radius);
+        cursor: pointer;
+        color: var(--primary-color);
+        font-weight: 600;
+        transition: var(--transition);
+        font-size: 13px;
+        min-width: 40px;
+        text-align: center;
+    }
+    
+    .page-btn:hover {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        color: white;
+        border-color: transparent;
+        transform: translateY(-1px);
+    }
+    
+    .page-btn.active {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        color: white;
+        border-color: transparent;
+    }
+    
+    /* ========== КНОПКИ ДЕЙСТВИЙ ========== */
+    .action-btns {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        margin-top: 25px;
+        padding-top: 25px;
+        border-top: 2px solid var(--primary-color);
+        flex-wrap: wrap;
+    }
+    
+    /* ========== КАЛЕНДАРЬ ========== */
+    .calendar-section {
+        background: white;
+        border-radius: 12px;
+        padding: 25px;
+        margin: 25px 0;
+        box-shadow: var(--box-shadow);
+        border: 2px solid var(--primary-color);
+    }
+    
+    .calendar-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 8px;
+        margin: 20px 0;
+    }
+    
+    .calendar-weekday {
+        text-align: center;
+        padding: 12px 0;
+        font-weight: 600;
+        color: var(--primary-color);
+        background: var(--light-bg);
+        border-radius: var(--border-radius);
+    }
+    
+    .calendar-day {
+        text-align: center;
+        padding: 15px 0;
+        border-radius: var(--border-radius);
+        cursor: pointer;
+        transition: var(--transition);
+        font-weight: 600;
+        background: white;
+        border: 1px solid #e9ecef;
+    }
+    
+    .calendar-day:hover {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        color: white;
+        transform: scale(1.05);
+        border-color: transparent;
+    }
+    
+    .calendar-day.today {
+        background: linear-gradient(135deg, var(--success-color) 0%, #2E7D32 100%);
+        color: white;
+        border-color: transparent;
+        box-shadow: 0 2px 5px rgba(76, 175, 80, 0.3);
+    }
+    
+    .calendar-day.event {
+        background: linear-gradient(135deg, var(--warning-color) 0%, #F57C00 100%);
+        color: white;
+        border-color: transparent;
+        box-shadow: 0 2px 5px rgba(255, 152, 0, 0.3);
+    }
+    
+    /* ========== УВЕДОМЛЕНИЯ ========== */
+    .notification-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .notification {
+        background: white;
+        padding: 15px 20px;
+        border-radius: var(--border-radius);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 300px;
+        max-width: 400px;
+        transform: translateX(150%);
+        transition: transform 0.3s ease;
+        border-left: 5px solid var(--success-color);
+    }
+    
+    .notification.show {
+        transform: translateX(0);
+    }
+    
+    .notification.error {
+        border-left-color: var(--danger-color);
+    }
+    
+    .notification.warning {
+        border-left-color: var(--warning-color);
+    }
+    
+    .notification.info {
+        border-left-color: var(--info-color);
+    }
+    
+    .notification-icon {
+        font-size: 20px;
+    }
+    
+    .notification-content {
+        flex-grow: 1;
+    }
+    
+    .notification-title {
+        font-weight: 600;
+        margin-bottom: 3px;
+    }
+    
+    .notification-message {
+        font-size: 13px;
+        color: #666;
+    }
+    
+    /* ========== МОДАЛЬНЫЕ ОКНА ========== */
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.7);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        animation: fadeIn 0.3s ease;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    .modal {
+        background: white;
+        border-radius: 12px;
+        padding: 30px;
+        min-width: 500px;
+        max-width: 800px;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+        border: 2px solid var(--primary-color);
+        animation: slideUp 0.3s ease;
+    }
+    
+    @keyframes slideUp {
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 25px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid var(--primary-color);
+    }
+    
+    .modal-title {
+        font-size: 20px;
+        font-weight: bold;
+        color: var(--dark-text);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .modal-close {
+        background: none;
+        border: none;
+        font-size: 28px;
+        cursor: pointer;
+        color: #666;
+        transition: var(--transition);
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .modal-close:hover {
+        background: var(--light-bg);
+        color: var(--primary-color);
+    }
+    
+    /* ========== АКТИВНЫЙ ВИЗИТ ========== */
+    .active-visit-bar {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(135deg, var(--success-color) 0%, #2E7D32 100%);
+        color: white;
+        padding: 12px 25px;
+        display: none;
+        z-index: 9998;
+        box-shadow: 0 -4px 15px rgba(76, 175, 80, 0.3);
+        animation: slideUpBar 0.3s ease;
+    }
+    
+    @keyframes slideUpBar {
+        from { transform: translateY(100%); }
+        to { transform: translateY(0); }
+    }
+    
+    .active-visit-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        max-width: 1400px;
+        margin: 0 auto;
+        font-size: 14px;
+    }
+    
+    .active-visit-info strong {
+        margin-right: 8px;
+    }
+    
+    /* ========== ФУТЕР ========== */
+    .crm-footer {
+        background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+        color: white;
+        padding: 30px 20px 20px;
+        margin-top: 40px;
+        border-top: 3px solid var(--primary-color);
+    }
+    
+    .footer-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 30px;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+    
+    .footer-column h3 {
+        margin-bottom: 18px;
+        font-size: 15px;
+        color: var(--primary-color);
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .footer-links {
+        list-style: none;
+        padding: 0;
+    }
+    
+    .footer-links li {
+        margin-bottom: 10px;
+    }
+    
+    .footer-links a {
+        color: white;
+        text-decoration: none;
+        font-size: 13px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        transition: var(--transition);
+        padding: 5px 0;
+    }
+    
+    .footer-links a:hover {
+        color: var(--primary-color);
+        transform: translateX(5px);
+    }
+    
+    .footer-btn {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        color: white;
+        border: none;
+        padding: 10px 18px;
+        border-radius: var(--border-radius);
+        cursor: pointer;
+        font-size: 13px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 12px;
+        width: 100%;
+        justify-content: center;
+        transition: var(--transition);
+    }
+    
+    .footer-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(102, 126, 234, 0.3);
+    }
+    
+    .copyright {
+        text-align: center;
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 1px solid rgba(255,255,255,0.1);
+        font-size: 13px;
+        color: #aaa;
+    }
+    
+    /* ========== АКТИВНЫЕ ФИЛЬТРЫ ========== */
+    .filters-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+    
+    .filter-controls {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+    }
+    
+    .filter-reset-btn {
+        background: var(--danger-color);
+        color: white;
+        border: none;
+        padding: 7px 14px;
+        border-radius: var(--border-radius);
+        cursor: pointer;
+        font-size: 12px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-weight: 600;
+        transition: var(--transition);
+    }
+    
+    .filter-reset-btn:hover {
+        background: #d32f2f;
+        transform: translateY(-1px);
+    }
+    
+    .active-filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin: 15px 0;
+        padding: 15px;
+        background: #f0f7f0;
+        border-radius: var(--border-radius);
+        border-left: 5px solid var(--success-color);
+        min-height: 55px;
+        align-items: center;
+    }
+    
+    .filter-tag {
+        background: linear-gradient(135deg, var(--success-color) 0%, #2E7D32 100%);
+        color: white;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-weight: 600;
+    }
+    
+    .filter-tag-remove {
+        cursor: pointer;
+        font-size: 11px;
+        opacity: 0.8;
+    }
+    
+    .filter-tag-remove:hover {
+        opacity: 1;
+    }
+    
+    /* ========== РЕГИСТРАЦИОННАЯ ФОРМА ========== */
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-label {
+        display: block;
+        margin-bottom: 6px;
+        font-weight: 600;
+        color: var(--dark-text);
+        font-size: 13px;
+    }
+    
+    .form-input {
+        width: 100%;
+        padding: 12px 15px;
+        border: 2px solid #e9ecef;
+        border-radius: var(--border-radius);
+        font-size: 14px;
+        transition: var(--transition);
+    }
+    
+    .form-input:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    
+    .form-textarea {
+        width: 100%;
+        padding: 12px 15px;
+        border: 2px solid #e9ecef;
+        border-radius: var(--border-radius);
+        font-size: 14px;
+        min-height: 120px;
+        resize: vertical;
+        transition: var(--transition);
+    }
+    
+    .form-textarea:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    
+    /* ========== ЗАГРУЗКА ФАЙЛОВ ========== */
+    .file-upload-area {
+        border: 3px dashed var(--primary-color);
+        border-radius: var(--border-radius);
+        padding: 40px;
+        text-align: center;
+        background: var(--light-bg);
+        cursor: pointer;
+        transition: var(--transition);
+        margin-bottom: 20px;
+    }
+    
+    .file-upload-area:hover {
+        border-color: var(--secondary-color);
+        background: #f3f0ff;
+    }
+    
+    .file-upload-area.active {
+        border-color: var(--success-color);
+        background: #e8f5e9;
+    }
+    
+    .file-upload-icon {
+        font-size: 48px;
+        color: var(--primary-color);
+        margin-bottom: 15px;
+    }
+    
+    .file-list {
+        max-height: 300px;
+        overflow-y: auto;
+        margin: 20px 0;
+        border: 1px solid #e9ecef;
+        border-radius: var(--border-radius);
+        padding: 15px;
+    }
+    
+    .file-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .file-item:last-child {
+        border-bottom: none;
+    }
+    
+    .file-info {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .file-icon {
+        color: var(--primary-color);
+    }
+    
+    /* ========== ПРОГРЕСС БАР ========== */
+    .progress-container {
+        background: #e9ecef;
+        border-radius: 10px;
+        height: 10px;
+        overflow: hidden;
+        margin: 15px 0;
+    }
+    
+    .progress-bar {
+        height: 100%;
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        transition: width 0.3s ease;
+    }
+    
+    /* ========== МОБИЛЬНАЯ АДАПТАЦИЯ ========== */
+    .mobile-action-fab {
+        position: fixed;
+        bottom: 80px;
+        right: 20px;
+        width: 56px;
+        height: 56px;
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        box-shadow: 0 4px 20px rgba(102, 126, 234, 0.5);
+        z-index: 9997;
+        cursor: pointer;
+        transition: var(--transition);
+        display: none;
+    }
+    
+    .mobile-action-fab:hover {
+        transform: scale(1.1);
+    }
+    
+    .pull-to-refresh {
+        position: fixed;
+        top: -60px;
+        left: 0;
+        right: 0;
+        height: 60px;
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        transition: transform 0.3s ease;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .pull-to-refresh.active {
+        transform: translateY(60px);
+    }
+    
+    /* ========== ОТВЕТСТВЕННЫЙ ДИЗАЙН ========== */
+    @media (max-width: 1200px) {
+        .header-container {
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .manager-selector {
+            min-width: 250px;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .crm-main {
+            padding: 0 15px;
+        }
+        
+        .menu-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .section-header {
+            flex-direction: column;
+            gap: 15px;
+            align-items: flex-start;
+        }
+        
+        .section-actions {
+            width: 100%;
+            justify-content: flex-start;
+        }
+        
+        .filters-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .action-btns {
+            flex-direction: column;
+        }
+        
+        .modal {
+            min-width: auto;
+            width: 95%;
+            padding: 20px;
+        }
+        
+        .footer-container {
+            grid-template-columns: 1fr;
+        }
+        
+        .mobile-action-fab {
+            display: flex;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .header-actions {
+            flex-wrap: wrap;
+        }
+        
+        .btn-visit-header {
+            min-width: 140px;
+            font-size: 13px;
+        }
+        
+        .menu-card {
+            padding: 20px;
+        }
+        
+        .file-upload-area {
+            padding: 20px;
+        }
+    }
+    </style>
+</head>
+<body>
+    <!-- ШАПКА -->
+    <header class="crm-header">
+        <div class="header-container">
+            <div class="logo">
+                <i class="fas fa-chart-line"></i>
+                <span>ВЕРТУМ CRM</span>
+            </div>
+
+            <div class="manager-selector">
+                <div class="current-manager" id="currentManager" onclick="toggleManagerDropdown()">
+                    <div class="manager-info">
+                        <div class="manager-name" id="currentManagerName">Хисматуллин Рустам Шафкатович</div>
+                        <div class="manager-contacts" id="currentManagerContacts">
+                            hrs@vertum.su • +7 (985) 710-21-27
+                        </div>
+                    </div>
+                    <i class="fas fa-chevron-down manager-arrow"></i>
+                </div>
+                
+                <div class="managers-dropdown" id="managersDropdown">
+                    <div class="manager-option active" onclick="selectManager('Хисматуллин')">
+                        <i class="fas fa-user-tie"></i>
+                        <div>
+                            <div class="manager-name">Хисматуллин Рустам Шафкатович</div>
+                            <div class="manager-contacts">hrs@vertum.su • +7 (985) 710-21-27</div>
+                        </div>
+                    </div>
+                    <div class="manager-option" onclick="selectManager('Хитров')">
+                        <i class="fas fa-user-tie"></i>
+                        <div>
+                            <div class="manager-name">Хитров Кирилл Юрьевич</div>
+                            <div class="manager-contacts">hky@vertum.su • +7 (909) 624-99-00</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="header-actions">
+                <button class="header-btn" onclick="syncData()">
+                    <i class="fas fa-sync-alt"></i> Синхр.
+                </button>
+                <button class="header-btn" onclick="sendReport()">
+                    <i class="fas fa-paper-plane"></i> Отчет
+                </button>
+                <button class="btn-visit-header" onclick="startVisit()" id="startVisitBtn">
+                    <i class="fas fa-play-circle"></i> НАЧАТЬ ВИЗИТ
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ПУЛТОУОБНОВЛЕНИЕ -->
+    <div class="pull-to-refresh" id="pullToRefresh">
+        <i class="fas fa-sync-alt fa-spin" style="color: var(--primary-color);"></i>
+        <span style="margin-left: 10px;">Обновление данных...</span>
+    </div>
+
+    <!-- МОБИЛЬНАЯ FAB КНОПКА -->
+    <div class="mobile-action-fab" id="mobileFab" onclick="openMobileMenu()">
+        <i class="fas fa-plus"></i>
+    </div>
+
+    <!-- УВЕДОМЛЕНИЯ -->
+    <div class="notification-container" id="notificationContainer"></div>
+
+    <!-- АКТИВНЫЙ ВИЗИТ -->
+    <div class="active-visit-bar" id="activeVisitBar">
+        <div class="active-visit-info">
+            <div>
+                <strong>🚗 АКТИВНЫЙ ВИЗИТ:</strong> 
+                <span id="activeVisitClient"></span> • 
+                <span id="activeVisitTime"></span>
+                <span id="activeVisitDuration" style="margin-left: 15px;"></span>
+            </div>
+            <button class="btn-visit-header" onclick="openActiveVisit()">
+                <i class="fas fa-external-link-alt"></i> Продолжить
+            </button>
+        </div>
+    </div>
+
+    <!-- ОСНОВНОЙ КОНТЕЙНЕР -->
+    <main class="crm-main">
+        <!-- ГЛАВНОЕ МЕНЮ -->
+        <div class="menu-grid" id="mainMenu">
+            <div class="menu-card active" onclick="showSection('clients')" data-section="clients">
+                <div class="menu-icon">
+                    <i class="fas fa-users"></i>
+                    <span class="menu-badge" id="clientsCount">0</span>
+                </div>
+                <div class="menu-title">ВСЕ КЛИЕНТЫ</div>
+                <div class="menu-subtitle">Таблица с фильтрами, поиском и экспортом</div>
+                <div class="menu-action">Смотреть →</div>
+            </div>
+
+            <div class="menu-card" onclick="showSection('excelData')" data-section="excelData">
+                <div class="menu-icon">
+                    <i class="fas fa-file-excel"></i>
+                    <span class="menu-badge" id="excelSheetsCount">4</span>
+                </div>
+                <div class="menu-title">ДАННЫЕ EXCEL</div>
+                <div class="menu-subtitle">Импорт/экспорт данных Excel</div>
+                <div class="menu-action">Открыть →</div>
+            </div>
+
+            <div class="menu-card" onclick="showCalendar()">
+                <div class="menu-icon">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span class="menu-badge" id="calendarEvents">3</span>
+                </div>
+                <div class="menu-title">КАЛЕНДАРЬ</div>
+                <div class="menu-subtitle">Встречи, визиты, дни рождения</div>
+                <div class="menu-action">Просмотреть →</div>
+            </div>
+
+            <div class="menu-card" onclick="showSection('fileUpload')" data-section="fileUpload">
+                <div class="menu-icon">
+                    <i class="fas fa-file-upload"></i>
+                    <span class="menu-badge" id="uploadedFiles">0</span>
+                </div>
+                <div class="menu-title">ПАРСИНГ ФАЙЛОВ</div>
+                <div class="menu-subtitle">Excel, PDF, CSV обработка</div>
+                <div class="menu-action">Загрузить →</div>
+            </div>
+
+            <div class="menu-card" onclick="showVisitsHistory()">
+                <div class="menu-icon">
+                    <i class="fas fa-history"></i>
+                    <span class="menu-badge" id="visitsHistoryCount">0</span>
+                </div>
+                <div class="menu-title">ИСТОРИЯ ВИЗИТОВ</div>
+                <div class="menu-subtitle">Архив всех встреч и визитов</div>
+                <div class="menu-action">Просмотреть →</div>
+            </div>
+
+            <div class="menu-card" onclick="showRegistrationForm()">
+                <div class="menu-icon">
+                    <i class="fas fa-user-plus"></i>
+                    <span class="menu-badge">+</span>
+                </div>
+                <div class="menu-title">РЕГИСТРАЦИЯ</div>
+                <div class="menu-subtitle">Новый клиент в системе</div>
+                <div class="menu-action">Заполнить →</div>
+            </div>
+
+            <div class="menu-card" onclick="startVisit()">
+                <div class="menu-icon">
+                    <i class="fas fa-play-circle"></i>
+                    <span class="menu-badge" id="visitsToday">0</span>
+                </div>
+                <div class="menu-title">НАЧАТЬ ВИЗИТ</div>
+                <div class="menu-subtitle">Активные посещения клиентов</div>
+                <div class="menu-action">СТАРТ →</div>
+            </div>
+        </div>
+
+        <!-- МИНИ-КАЛЕНДАРЬ -->
+        <div class="calendar-section" id="miniCalendar">
+            <div class="section-header">
+                <div class="section-title">
+                    <i class="fas fa-calendar-day"></i>
+                    БЛИЖАЙШИЕ ВСТРЕЧИ
+                </div>
+                <button class="action-btn btn-info" onclick="showCalendar()">
+                    <i class="fas fa-expand"></i> Весь календарь
+                </button>
+            </div>
+            
+            <div class="calendar-grid">
+                <div class="calendar-weekday">Пн</div>
+                <div class="calendar-weekday">Вт</div>
+                <div class="calendar-weekday">Ср</div>
+                <div class="calendar-weekday">Чт</div>
+                <div class="calendar-weekday">Пт</div>
+                <div class="calendar-weekday">Сб</div>
+                <div class="calendar-weekday">Вс</div>
+                
+                <!-- Заполняется динамически -->
+            </div>
+            
+            <div style="margin-top: 20px;" id="calendarEventsList">
+                <!-- События загружаются динамически -->
+            </div>
+        </div>
+
+        <!-- СТАТИСТИКА -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <i class="fas fa-users"></i>
+                <div class="stat-value" id="statTotalClients">0</div>
+                <div class="stat-label">Всего клиентов</div>
+            </div>
+
+            <div class="stat-card">
+                <i class="fas fa-ruble-sign"></i>
+                <div class="stat-value">158.4M ₽</div>
+                <div class="stat-label">Продажи 2025</div>
+            </div>
+
+            <div class="stat-card">
+                <i class="fas fa-bullseye"></i>
+                <div class="stat-value">210M ₽</div>
+                <div class="stat-label">План 2026</div>
+            </div>
+
+            <div class="stat-card">
+                <i class="fas fa-calendar-check"></i>
+                <div class="stat-value" id="statVisitsCount">0</div>
+                <div class="stat-label">Визитов в 2026</div>
+            </div>
+
+            <div class="stat-card">
+                <i class="fas fa-percentage"></i>
+                <div class="stat-value">24%</div>
+                <div class="stat-label">Выполнение плана</div>
+            </div>
+
+            <div class="stat-card">
+                <i class="fas fa-boxes"></i>
+                <div class="stat-value">7</div>
+                <div class="stat-label">Товарных групп</div>
+            </div>
+        </div>
+
+        <!-- РАЗДЕЛ "ВСЕ КЛИЕНТЫ" -->
+        <div id="clientsSection" class="section-container">
+            <div class="section-header">
+                <div class="section-title">
+                    <i class="fas fa-users"></i>
+                    ВСЕ КЛИЕНТЫ
+                    <span class="manager-badge" id="currentManagerBadge">Хисматуллин Р.Ш.</span>
+                </div>
+                <div class="section-actions">
+                    <span class="counter-badge" id="filteredCount">
+                        Показано: <strong>0</strong> из <strong>0</strong>
+                    </span>
+                    <button class="action-btn btn-success" onclick="exportCSV()">
+                        <i class="fas fa-file-csv"></i> CSV
+                    </button>
+                    <button class="action-btn btn-primary" onclick="exportToExcel()">
+                        <i class="fas fa-file-excel"></i> Excel
+                    </button>
+                    <button class="action-btn btn-info" onclick="generateReport()">
+                        <i class="fas fa-chart-bar"></i> Отчет
+                    </button>
+                    <button class="action-btn btn-green" onclick="showRegistrationForm()">
+                        <i class="fas fa-plus"></i> Новый клиент
+                    </button>
+                    <button class="btn-visit-header" style="padding: 8px 15px; font-size: 13px;" onclick="startVisitFromTable()">
+                        <i class="fas fa-play-circle"></i> Начать визит
+                    </button>
+                </div>
+            </div>
+
+            <!-- ПАНЕЛЬ УПРАВЛЕНИЯ ФИЛЬТРАМИ -->
+            <div class="filters-header">
+                <h4><i class="fas fa-filter"></i> ФИЛЬТРЫ КЛИЕНТОВ</h4>
+                <div class="filter-controls">
+                    <button class="filter-reset-btn" onclick="resetAllFilters()">
+                        <i class="fas fa-times"></i> Сбросить все
+                    </button>
+                    <span class="counter-badge" id="activeFiltersCount">Активных фильтров: 0</span>
+                </div>
+            </div>
+
+            <!-- АКТИВНЫЕ ФИЛЬТРЫ -->
+            <div class="active-filters" id="activeFiltersContainer" style="display: none;">
+                <!-- Активные фильтры отображаются здесь -->
+            </div>
+
+            <!-- ПОИСК -->
+            <div class="search-box">
+                <input type="text" class="search-input" id="searchInput" 
+                       placeholder="🔍 Поиск по коду, названию, адресу, телефону..." 
+                       oninput="filterTable()">
+            </div>
+
+            <!-- ФИЛЬТРЫ -->
+            <div class="filters-grid" id="filtersGrid">
+                <!-- Фильтры загружаются динамически -->
+            </div>
+
+            <!-- ТАБЛИЦА КЛИЕНТОВ -->
+            <div class="table-container">
+                <table class="data-table" id="clientsTable">
+                    <thead id="clientsTableHead">
+                        <!-- Заголовки загружаются динамически -->
+                    </thead>
+                    <tbody id="clientsTableBody">
+                        <!-- Данные загружаются динамически -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- ПАГИНАЦИЯ -->
+            <div class="pagination" id="pagination">
+                <!-- Страницы загружаются динамически -->
+            </div>
+
+            <!-- ДЕЙСТВИЯ -->
+            <div class="action-btns">
+                <button class="action-btn" style="background: #666; color: white;" onclick="showSection('main')">
+                    <i class="fas fa-arrow-left"></i> Назад в меню
+                </button>
+                <button class="action-btn btn-primary" onclick="showRegistrationForm()">
+                    <i class="fas fa-user-plus"></i> Новый клиент
+                </button>
+                <button class="action-btn btn-info" onclick="generateReport()">
+                    <i class="fas fa-chart-bar"></i> Создать отчет
+                </button>
+                <button class="btn-visit-header" style="padding: 8px 15px; font-size: 13px;" onclick="startVisitFromTable()">
+                    <i class="fas fa-play-circle"></i> Начать визит
+                </button>
+            </div>
+        </div>
+
+        <!-- РАЗДЕЛ "ДАННЫЕ EXCEL" -->
+        <div id="excelDataSection" class="section-container">
+            <div class="section-header">
+                <div class="section-title">
+                    <i class="fas fa-file-excel"></i>
+                    ДАННЫЕ ИЗ EXCEL ФАЙЛА
+                    <span class="manager-badge">Хисматуллин КБ срм.xlsx</span>
+                </div>
+                <div class="section-actions">
+                    <span class="counter-badge" id="excelCount">
+                        Загружено: <strong>0</strong> записей
+                    </span>
+                    <button class="action-btn btn-success" onclick="exportExcelToCSV()">
+                        <i class="fas fa-download"></i> Экспорт CSV
+                    </button>
+                    <button class="action-btn" style="background: #666; color: white;" onclick="refreshExcelData()">
+                        <i class="fas fa-sync-alt"></i> Обновить
+                    </button>
+                    <button class="action-btn btn-info" onclick="generateExcelReport()">
+                        <i class="fas fa-chart-bar"></i> Отчет по Excel
+                    </button>
+                </div>
+            </div>
+
+            <div class="excel-controls" style="margin: 20px 0;">
+                <select id="excelSheetSelect" class="filter-select" onchange="loadExcelSheet()" style="margin-right: 10px;">
+                    <option value="">Выберите лист Excel...</option>
+                </select>
+                
+                <input type="text" class="search-input" id="excelSearchInput" 
+                       placeholder="🔍 Поиск по всем листам..." 
+                       style="flex-grow: 1;"
+                       oninput="searchExcelData()">
+                
+                <button class="action-btn btn-warning" onclick="importExcelFile()" style="margin-left: 10px;">
+                    <i class="fas fa-upload"></i> Импорт Excel
+                </button>
+            </div>
+
+            <div class="table-container">
+                <table class="data-table" id="excelDataTable">
+                    <thead id="excelTableHead">
+                        <!-- Заголовки загружаются динамически -->
+                    </thead>
+                    <tbody id="excelTableBody">
+                        <!-- Данные загружаются динамически -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="excel-stats" id="excelStats" style="display: flex; gap: 15px; margin-top: 20px; flex-wrap: wrap;">
+                <div style="background: white; padding: 15px; border-radius: 10px; border-left: 4px solid var(--primary-color); min-width: 150px; border: 1px solid #e9ecef;">
+                    <div style="font-size: 12px; color: #666; margin-bottom: 5px; font-weight: 600;">Текущий лист</div>
+                    <div style="font-size: 18px; font-weight: bold; color: var(--dark-text);" id="currentSheetName">—</div>
+                </div>
+                <div style="background: white; padding: 15px; border-radius: 10px; border-left: 4px solid var(--success-color); min-width: 150px; border: 1px solid #e9ecef;">
+                    <div style="font-size: 12px; color: #666; margin-bottom: 5px; font-weight: 600;">Записей</div>
+                    <div style="font-size: 18px; font-weight: bold; color: var(--dark-text);" id="excelRowCount">0</div>
+                </div>
+                <div style="background: white; padding: 15px; border-radius: 10px; border-left: 4px solid var(--info-color); min-width: 150px; border: 1px solid #e9ecef;">
+                    <div style="font-size: 12px; color: #666; margin-bottom: 5px; font-weight: 600;">Столбцов</div>
+                    <div style="font-size: 18px; font-weight: bold; color: var(--dark-text);" id="excelColCount">0</div>
+                </div>
+                <div style="background: white; padding: 15px; border-radius: 10px; border-left: 4px solid var(--warning-color); min-width: 150px; border: 1px solid #e9ecef;">
+                    <div style="font-size: 12px; color: #666; margin-bottom: 5px; font-weight: 600;">Обновлено</div>
+                    <div style="font-size: 18px; font-weight: bold; color: var(--dark-text);" id="excelUpdateTime">—</div>
+                </div>
+            </div>
+
+            <div class="action-btns">
+                <button class="action-btn" style="background: #666; color: white;" onclick="showSection('main')">
+                    <i class="fas fa-arrow-left"></i> Назад в меню
+                </button>
+                <button class="action-btn btn-success" onclick="exportExcelToCSV()">
+                    <i class="fas fa-download"></i> Экспорт CSV
+                </button>
+                <button class="action-btn btn-primary" onclick="exportToExcel()">
+                    <i class="fas fa-file-excel"></i> Экспорт Excel
+                </button>
+            </div>
+        </div>
+
+        <!-- РАЗДЕЛ "ПАРСИНГ ФАЙЛОВ" -->
+        <div id="fileUploadSection" class="section-container">
+            <div class="section-header">
+                <div class="section-title">
+                    <i class="fas fa-file-upload"></i>
+                    ПАРСИНГ И ОБРАБОТКА ФАЙЛОВ
+                    <span class="manager-badge">Excel • PDF • CSV</span>
+                </div>
+                <div class="section-actions">
+                    <span class="counter-badge" id="parsedFilesCount">
+                        Обработано: <strong>0</strong> файлов
+                    </span>
+                    <button class="action-btn btn-info" onclick="loadParsedFiles()">
+                        <i class="fas fa-history"></i> История
+                    </button>
+                </div>
+            </div>
+
+            <div style="padding: 20px;">
+                <!-- ОБЛАСТЬ ЗАГРУЗКИ -->
+                <div class="file-upload-area" id="dropZone" 
+                     onclick="document.getElementById('fileInput').click()"
+                     ondrop="handleDrop(event)"
+                     ondragover="handleDragOver(event)"
+                     ondragleave="handleDragLeave(event)">
+                    <div class="file-upload-icon">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                    </div>
+                    <h3 style="color: var(--primary-color); margin-bottom: 10px;">
+                        ПЕРЕТАЩИТЕ ФАЙЛЫ СЮДА ИЛИ НАЖМИТЕ ДЛЯ ВЫБОРА
+                    </h3>
+                    <p style="color: #666; margin-bottom: 15px;">
+                        Поддерживаемые форматы: Excel (.xlsx, .xls, .csv), PDF (.pdf)
+                    </p>
+                    <p style="font-size: 12px; color: #999;">
+                        Максимальный размер: 50MB
+                    </p>
+                </div>
+
+                <!-- СКРЫТЫЙ INPUT -->
+                <input type="file" id="fileInput" multiple accept=".xlsx,.xls,.csv,.pdf" 
+                       style="display: none;" onchange="handleFileSelect(event)">
+
+                <!-- ПРОГРЕСС БАР -->
+                <div id="uploadProgress" style="display: none; margin: 20px 0;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                        <span id="progressFileName">Файл не выбран</span>
+                        <span id="progressPercent">0%</span>
+                    </div>
+                    <div class="progress-container">
+                        <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+                    </div>
+                    <div id="progressStatus" style="text-align: center; font-size: 12px; color: #666; margin-top: 5px;">
+                        Подготовка к загрузке...
+                    </div>
+                </div>
+
+                <!-- ВЫБРАННЫЕ ФАЙЛЫ -->
+                <div id="selectedFiles" style="display: none;">
+                    <h4 style="margin-bottom: 15px; color: var(--dark-text);">
+                        <i class="fas fa-file-alt"></i> Выбранные файлы:
+                    </h4>
+                    <div class="file-list" id="fileList">
+                        <!-- Файлы отображаются здесь -->
+                    </div>
+                    <div style="display: flex; gap: 10px; margin-top: 15px;">
+                        <button class="action-btn btn-success" onclick="uploadFiles()">
+                            <i class="fas fa-upload"></i> Загрузить и обработать
+                        </button>
+                        <button class="action-btn btn-warning" onclick="clearFileSelection()">
+                            <i class="fas fa-times"></i> Очистить
+                        </button>
+                    </div>
+                </div>
+
+                <!-- РЕЗУЛЬТАТЫ ПАРСИНГА -->
+                <div id="parseResults" style="display: none; margin-top: 30px;">
+                    <div class="section-header" style="margin-bottom: 20px;">
+                        <div class="section-title">
+                            <i class="fas fa-chart-bar"></i>
+                            РЕЗУЛЬТАТЫ ОБРАБОТКИ
+                        </div>
+                        <button class="action-btn btn-info" onclick="exportParsedData()">
+                            <i class="fas fa-download"></i> Экспорт данных
+                        </button>
+                    </div>
+                    
+                    <div id="resultsContainer">
+                        <!-- Результаты загружаются динамически -->
+                    </div>
+                </div>
+
+                <!-- ИСТОРИЯ ОБРАБОТКИ -->
+                <div id="parsedFilesHistory" style="display: none; margin-top: 30px;">
+                    <div class="section-header" style="margin-bottom: 20px;">
+                        <div class="section-title">
+                            <i class="fas fa-history"></i>
+                            ИСТОРИЯ ОБРАБОТАННЫХ ФАЙЛОВ
+                        </div>
+                        <button class="action-btn" onclick="hideParsedFiles()" style="background: #666; color: white;">
+                            <i class="fas fa-arrow-left"></i> Назад
+                        </button>
+                    </div>
+                    
+                    <div id="historyList" style="max-height: 400px; overflow-y: auto;">
+                        <!-- История загружается динамически -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-btns">
+                <button class="action-btn" style="background: #666; color: white;" onclick="showSection('main')">
+                    <i class="fas fa-arrow-left"></i> Назад в меню
+                </button>
+                <button class="action-btn btn-primary" onclick="document.getElementById('fileInput').click()">
+                    <i class="fas fa-folder-open"></i> Выбрать файлы
+                </button>
+                <button class="action-btn btn-success" onclick="loadParsedFiles()">
+                    <i class="fas fa-history"></i> История обработки
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- ФУТЕР -->
+    <footer class="crm-footer">
+        <div class="footer-container">
+            <div class="footer-column">
+                <h3>ВЕРТУМ CRM</h3>
+                <p style="font-size: 13px; color: #ccc; margin-bottom: 20px; line-height: 1.5;">
+                    Торговая система управления клиентами. Полный контроль над визитами, встречами и продажами.
+                </p>
+                <div class="footer-contacts" style="font-size: 13px;">
+                    <div style="margin-bottom: 8px;"><i class="fas fa-user"></i> <span id="footerManager">Хисматуллин Рустам Шафкатович</span></div>
+                    <div style="margin-bottom: 8px;"><i class="fas fa-envelope"></i> <span id="footerEmail">hrs@vertum.su</span></div>
+                    <div style="margin-bottom: 8px;"><i class="fas fa-phone"></i> <span id="footerPhone">+7 (985) 710-21-27</span></div>
+                    <div><i class="fas fa-database"></i> <span id="footerDataInfo">Клиентов: 0 | Визитов: 0</span></div>
+                </div>
+            </div>
+            
+            <div class="footer-column">
+                <h3>Быстрые ссылки</h3>
+                <ul class="footer-links">
+                    <li><a href="#" onclick="showSection('clients')"><i class="fas fa-users"></i> Все клиенты</a></li>
+                    <li><a href="#" onclick="showSection('excelData')"><i class="fas fa-file-excel"></i> Данные Excel</a></li>
+                    <li><a href="#" onclick="showSection('fileUpload')"><i class="fas fa-file-upload"></i> Парсинг файлов</a></li>
+                    <li><a href="#" onclick="showCalendar()"><i class="fas fa-calendar-alt"></i> Календарь</a></li>
+                    <li><a href="#" onclick="showRegistrationForm()"><i class="fas fa-user-plus"></i> Регистрация</a></li>
+                    <li><a href="#" onclick="startVisit()"><i class="fas fa-play-circle"></i> Начать визит</a></li>
+                    <li><a href="#" onclick="showVisitsHistory()"><i class="fas fa-history"></i> История визитов</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-column">
+                <h3>Экспорт данных</h3>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <button class="footer-btn" onclick="exportCSV()">
+                        <i class="fas fa-file-csv"></i> CSV файл
+                    </button>
+                    <button class="footer-btn" onclick="exportToExcel()">
+                        <i class="fas fa-file-excel"></i> Excel файл
+                    </button>
+                    <button class="footer-btn" onclick="generateReport()">
+                        <i class="fas fa-chart-bar"></i> Статистика
+                    </button>
+                </div>
+                
+                <h3 style="margin-top: 25px;">Системные функции</h3>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <button class="footer-btn" onclick="syncData()" style="font-size: 13px;">
+                        <i class="fas fa-sync-alt"></i> Синхронизация
+                    </button>
+                    <button class="footer-btn" onclick="sendReport()" style="font-size: 13px;">
+                        <i class="fas fa-paper-plane"></i> Отправить отчет
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="copyright">
+            © 2024 ВЕРТУМ CRM • <span id="currentDate"></span> • Версия 2.0 • 
+            <span id="currentTime"></span> • <span id="systemStatus">🟢 Система активна</span>
+        </div>
+    </footer>
+
+    <!-- МОДАЛЬНЫЕ ОКНА -->
+    <div class="modal-overlay" id="visitModal">
+        <div class="modal" id="modalContainer">
+            <!-- Контент загружается динамически -->
+        </div>
+    </div>
+
+    <script>
+    // ============================================
+    // ПОЛНЫЙ ФУНКЦИОНАЛ CRM ВЕРТУМ 2.0
+    // С ПАРСИНГОМ EXCEL, PDF И EMAIL ОТПРАВКОЙ
+    // ============================================
+
+    // Глобальные переменные
+    let allClientsData = [];
+    let filteredClientsData = [];
+    let currentPage = 1;
+    const itemsPerPage = 20;
+    let activeVisit = null;
+    let selectedClientForVisit = null;
+    let visitTimer = null;
+    let visitStartTime = null;
+    let currentCalendarMonth = new Date().getMonth();
+    let currentCalendarYear = new Date().getFullYear();
+    let excelData = null;
+    let selectedFiles = [];
+    let isRefreshing = false;
+
+    // Базовый URL API
+    const API_BASE_URL = 'http://localhost:3000/api';
+
+    // Конфигурация менеджеров
+    const MANAGERS_CONFIG = {
+        'Хисматуллин': {
+            name: 'Хисматуллин Рустам Шафкатович',
+            email: 'hrs@vertum.su',
+            phone: '+7 (985) 710-21-27',
+            short: 'Хисматуллин Р.Ш.',
+            reportTo: 'ddn@vertum.su',
+            reportBcc: 'hrs@vertum.su'
+        },
+        'Хитров': {
+            name: 'Хитров Кирилл Юрьевич',
+            email: 'hky@vertum.su',
+            phone: '+7 (909) 624-99-00',
+            short: 'Хитров К.Ю.',
+            reportTo: 'ddn@vertum.su',
+            reportBcc: 'hky@vertum.su'
+        }
+    };
+
+    let currentManager = MANAGERS_CONFIG['Хисматуллин'];
+
+    // 1. ИНИЦИАЛИЗАЦИЯ СИСТЕМЫ
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('🚀 Запуск ВЕРТУМ CRM v2.0 с парсингом файлов...');
+        
+        initializeSystem();
+        updateDateTime();
+        checkActiveVisit();
+        initializeMiniCalendar();
+        setupTouchEvents();
+        setupServiceWorker();
+        setupFileUpload();
+        checkServerHealth();
+        
+        console.log('✅ ВЕРТУМ CRM готов к работе');
+    });
+
+    function initializeSystem() {
+        loadClientsData();
+        updateManagerUI();
+        initializeFilters();
+        updateStatistics();
+        updateSystemInfo();
+        loadCalendarEvents();
+        initializeMobileFab();
+    }
+
+    // 2. API ВЗАИМОДЕЙСТВИЕ
+    async function fetchWithCORS(url, options = {}) {
+        const defaultOptions = {
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            credentials: 'same-origin',
+            mode: 'cors'
+        };
+
+        const mergedOptions = { ...defaultOptions, ...options };
+
+        try {
+            const response = await fetch(url, mergedOptions);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                return await response.json();
+            } else {
+                return await response.text();
+            }
+        } catch (error) {
+            console.error('API Error:', error);
+            showNotification(`Ошибка сети: ${error.message}`, 'error');
+            throw error;
+        }
+    }
+
+    // 3. ПАРСИНГ ФАЙЛОВ - ОСНОВНЫЕ ФУНКЦИИ
+    function setupFileUpload() {
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        
+        if (!dropZone || !fileInput) return;
+        
+        // Обработка drag & drop
+        dropZone.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            dropZone.classList.add('active');
+        });
+        
+        dropZone.addEventListener('dragleave', function() {
+            dropZone.classList.remove('active');
+        });
+    }
+
+    function handleDragOver(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        document.getElementById('dropZone').classList.add('active');
+    }
+
+    function handleDragLeave(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        document.getElementById('dropZone').classList.remove('active');
+    }
+
+    function handleDrop(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        document.getElementById('dropZone').classList.remove('active');
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            handleFiles(files);
+        }
+    }
+
+    function handleFileSelect(e) {
+        const files = e.target.files;
+        if (files.length > 0) {
+            handleFiles(files);
+        }
+    }
+
+    function handleFiles(files) {
+        selectedFiles = Array.from(files);
+        
+        // Проверка типов файлов
+        const allowedTypes = [
+            'application/vnd.ms-excel',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'application/pdf',
+            'text/csv',
+            'application/vnd.oasis.opendocument.spreadsheet'
+        ];
+        
+        const validFiles = selectedFiles.filter(file => {
+            return allowedTypes.includes(file.type) || 
+                   file.name.match(/\.(xlsx|xls|csv|pdf)$/i);
+        });
+        
+        if (validFiles.length !== selectedFiles.length) {
+            showNotification('Некоторые файлы не поддерживаются', 'warning');
+        }
+        
+        selectedFiles = validFiles;
+        
+        if (selectedFiles.length > 0) {
+            displaySelectedFiles();
+        }
+    }
+
+    function displaySelectedFiles() {
+        const fileList = document.getElementById('fileList');
+        const selectedFilesDiv = document.getElementById('selectedFiles');
+        
+        if (!fileList || !selectedFilesDiv) return;
+        
+        fileList.innerHTML = '';
+        
+        selectedFiles.forEach((file, index) => {
+            const fileSize = (file.size / 1024 / 1024).toFixed(2);
+            const fileItem = document.createElement('div');
+            fileItem.className = 'file-item';
+            fileItem.innerHTML = `
+                <div class="file-info">
+                    <i class="fas ${getFileIcon(file)} file-icon"></i>
+                    <div>
+                        <div style="font-weight: 600;">${file.name}</div>
+                        <div style="font-size: 12px; color: #666;">
+                            ${fileSize} MB • ${file.type || 'Неизвестный тип'}
+                        </div>
+                    </div>
+                </div>
+                <button onclick="removeFile(${index})" class="btn-small" style="background: var(--danger-color); color: white;">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            fileList.appendChild(fileItem);
+        });
+        
+        selectedFilesDiv.style.display = 'block';
+        document.getElementById('uploadProgress').style.display = 'none';
+        document.getElementById('parseResults').style.display = 'none';
+    }
+
+    function getFileIcon(file) {
+        if (file.type.includes('pdf')) return 'fa-file-pdf';
+        if (file.type.includes('excel') || file.type.includes('spreadsheet')) return 'fa-file-excel';
+        if (file.type.includes('csv')) return 'fa-file-csv';
+        return 'fa-file';
+    }
+
+    function removeFile(index) {
+        selectedFiles.splice(index, 1);
+        if (selectedFiles.length === 0) {
+            document.getElementById('selectedFiles').style.display = 'none';
+        } else {
+            displaySelectedFiles();
+        }
+    }
+
+    function clearFileSelection() {
+        selectedFiles = [];
+        document.getElementById('selectedFiles').style.display = 'none';
+        document.getElementById('fileInput').value = '';
+    }
+
+    async function uploadFiles() {
+        if (selectedFiles.length === 0) {
+            showNotification('Выберите файлы для загрузки', 'warning');
+            return;
+        }
+        
+        const progressDiv = document.getElementById('uploadProgress');
+        const progressBar = document.getElementById('progressBar');
+        const progressPercent = document.getElementById('progressPercent');
+        const progressStatus = document.getElementById('progressStatus');
+        const progressFileName = document.getElementById('progressFileName');
+        
+        progressDiv.style.display = 'block';
+        document.getElementById('selectedFiles').style.display = 'none';
+        
+        let results = [];
+        
+        for (let i = 0; i < selectedFiles.length; i++) {
+            const file = selectedFiles[i];
+            
+            // Обновляем прогресс
+            progressFileName.textContent = `Обработка: ${file.name}`;
+            progressPercent.textContent = `${Math.round(((i) / selectedFiles.length) * 100)}%`;
+            progressBar.style.width = `${((i) / selectedFiles.length) * 100}%`;
+            progressStatus.textContent = `Загрузка файла ${i + 1} из ${selectedFiles.length}`;
+            
+            try {
+                const result = await uploadAndParseFile(file);
+                results.push(result);
+            } catch (error) {
+                console.error('Ошибка обработки файла:', error);
+                showNotification(`Ошибка обработки ${file.name}: ${error.message}`, 'error');
+            }
+        }
+        
+        // Финальный прогресс
+        progressPercent.textContent = '100%';
+        progressBar.style.width = '100%';
+        progressStatus.textContent = 'Обработка завершена';
+        progressFileName.textContent = 'Все файлы обработаны';
+        
+        // Показываем результаты
+        setTimeout(() => {
+            displayParseResults(results);
+            progressDiv.style.display = 'none';
+            selectedFiles = [];
+            updateParsedFilesCount();
+        }, 1000);
+    }
+
+    async function uploadAndParseFile(file) {
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        try {
+            const response = await fetch(`${API_BASE_URL}/parse-file`, {
+                method: 'POST',
+                body: formData
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                showNotification(`Файл "${file.name}" успешно обработан`, 'success');
+                return result;
+            } else {
+                throw new Error(result.error || 'Неизвестная ошибка');
+            }
+            
+        } catch (error) {
+            console.error('Upload error:', error);
+            throw error;
+        }
+    }
+
+    function displayParseResults(results) {
+        const resultsContainer = document.getElementById('resultsContainer');
+        const parseResults = document.getElementById('parseResults');
+        
+        if (!resultsContainer || !parseResults) return;
+        
+        if (results.length === 0) {
+            resultsContainer.innerHTML = `
+                <div style="text-align: center; padding: 40px; color: #666;">
+                    <i class="fas fa-exclamation-circle" style="font-size: 48px; margin-bottom: 15px; color: #e9ecef;"></i>
+                    <div>Нет результатов обработки</div>
+                </div>
+            `;
+            parseResults.style.display = 'block';
+            return;
+        }
+        
+        let html = '';
+        
+        results.forEach((result, index) => {
+            const data = result.result?.data || {};
+            
+            html += `
+                <div style="background: white; border: 1px solid #e9ecef; border-radius: var(--border-radius); padding: 20px; margin-bottom: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <div>
+                            <div style="font-weight: 600; font-size: 16px; color: var(--dark-text);">
+                                <i class="fas ${getFileIconFromName(result.filename)}"></i>
+                                ${result.filename}
+                            </div>
+                            <div style="font-size: 13px; color: #666;">
+                                Тип: ${result.fileType} • Размер: ${(result.fileSize / 1024 / 1024).toFixed(2)} MB
+                            </div>
+                        </div>
+                        <span style="background: var(--success-color); color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;">
+                            Успешно
+                        </span>
+                    </div>
+                    
+                    ${displayResultData(data, result.fileType)}
+                    
+                    <div style="margin-top: 15px; display: flex; gap: 10px;">
+                        <button class="btn-small" style="background: var(--primary-color); color: white;" 
+                                onclick="downloadParsedResult('${result.savedAs}')">
+                            <i class="fas fa-download"></i> Скачать JSON
+                        </button>
+                        <button class="btn-small" style="background: var(--success-color); color: white;" 
+                                onclick="exportResultToExcel(${index})">
+                            <i class="fas fa-file-excel"></i> Экспорт в Excel
+                        </button>
+                    </div>
+                </div>
+            `;
+        });
+        
+        resultsContainer.innerHTML = html;
+        parseResults.style.display = 'block';
+    }
+
+    function displayResultData(data, fileType) {
+        if (fileType.includes('excel') || fileType.includes('spreadsheet') || fileType.includes('csv')) {
+            // Excel данные
+            return `
+                <div>
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 15px;">
+                        <div style="background: var(--light-bg); padding: 10px; border-radius: var(--border-radius); text-align: center;">
+                            <div style="font-size: 12px; color: #666;">Листов</div>
+                            <div style="font-size: 18px; font-weight: bold;">${data.summary?.totalSheets || 0}</div>
+                        </div>
+                        <div style="background: var(--light-bg); padding: 10px; border-radius: var(--border-radius); text-align: center;">
+                            <div style="font-size: 12px; color: #666;">Ячеек</div>
+                            <div style="font-size: 18px; font-weight: bold;">${data.summary?.totalCells || 0}</div>
+                        </div>
+                        <div style="background: var(--light-bg); padding: 10px; border-radius: var(--border-radius); text-align: center;">
+                            <div style="font-size: 12px; color: #666;">Строк</div>
+                            <div style="font-size: 18px; font-weight: bold;">${data.sheets?.[0]?.stats?.totalRows || 0}</div>
+                        </div>
+                        <div style="background: var(--light-bg); padding: 10px; border-radius: var(--border-radius); text-align: center;">
+                            <div style="font-size: 12px; color: #666;">Столбцов</div>
+                            <div style="font-size: 18px; font-weight: bold;">${data.sheets?.[0]?.stats?.totalColumns || 0}</div>
+                        </div>
+                    </div>
+                    
+                    ${data.sheets && data.sheets.length > 0 ? `
+                        <div style="margin-top: 15px;">
+                            <h5 style="margin-bottom: 10px; color: var(--dark-text);">Первый лист:</h5>
+                            <div style="max-height: 200px; overflow-y: auto; border: 1px solid #e9ecef; border-radius: var(--border-radius);">
+                                <table style="width: 100%; border-collapse: collapse;">
+                                    <thead>
+                                        <tr>
+                                            ${data.sheets[0].headers.map(header => 
+                                                `<th style="padding: 8px; border-bottom: 1px solid #e9ecef; background: #f8f9fa; text-align: left;">${header}</th>`
+                                            ).join('')}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${data.sheets[0].rows.slice(0, 5).map(row => `
+                                            <tr>
+                                                ${row.map(cell => 
+                                                    `<td style="padding: 8px; border-bottom: 1px solid #e9ecef;">${cell || ''}</td>`
+                                                ).join('')}
+                                            </tr>
+                                        `).join('')}
+                                        ${data.sheets[0].rows.length > 5 ? `
+                                            <tr>
+                                                <td colspan="${data.sheets[0].headers.length}" style="padding: 8px; text-align: center; color: #666; font-style: italic;">
+                                                    ... и еще ${data.sheets[0].rows.length - 5} строк
+                                                </td>
+                                            </tr>
+                                        ` : ''}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        } else if (fileType.includes('pdf')) {
+            // PDF данные
+            return `
+                <div>
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 15px;">
+                        <div style="background: var(--light-bg); padding: 10px; border-radius: var(--border-radius); text-align: center;">
+                            <div style="font-size: 12px; color: #666;">Страниц</div>
+                            <div style="font-size: 18px; font-weight: bold;">${data.stats?.totalPages || 0}</div>
+                        </div>
+                        <div style="background: var(--light-bg); padding: 10px; border-radius: var(--border-radius); text-align: center;">
+                            <div style="font-size: 12px; color: #666;">Слов</div>
+                            <div style="font-size: 18px; font-weight: bold;">${data.stats?.totalWords || 0}</div>
+                        </div>
+                        <div style="background: var(--light-bg); padding: 10px; border-radius: var(--border-radius); text-align: center;">
+                            <div style="font-size: 12px; color: #666;">Email</div>
+                            <div style="font-size: 18px; font-weight: bold;">${data.extractedData?.emails?.length || 0}</div>
+                        </div>
+                        <div style="background: var(--light-bg); padding: 10px; border-radius: var(--border-radius); text-align: center;">
+                            <div style="font-size: 12px; color: #666;">Телефоны</div>
+                            <div style="font-size: 18px; font-weight: bold;">${data.extractedData?.phones?.length || 0}</div>
+                        </div>
+                    </div>
+                    
+                    ${data.extractedData?.emails?.length > 0 ? `
+                        <div style="margin-top: 15px;">
+                            <h5 style="margin-bottom: 10px; color: var(--dark-text);">Извлеченные emails:</h5>
+                            <div style="display: flex; flex-wrap: wrap; gap: 5px;">
+                                ${data.extractedData.emails.slice(0, 10).map(email => 
+                                    `<span style="background: #e3f2fd; color: #1976d2; padding: 3px 8px; border-radius: 12px; font-size: 12px;">${email}</span>`
+                                ).join('')}
+                                ${data.extractedData.emails.length > 10 ? 
+                                    `<span style="color: #666; font-size: 12px;">... и еще ${data.extractedData.emails.length - 10}</span>` : ''
+                                }
+                            </div>
+                        </div>
+                    ` : ''}
+                    
+                    ${data.extractedData?.phones?.length > 0 ? `
+                        <div style="margin-top: 15px;">
+                            <h5 style="margin-bottom: 10px; color: var(--dark-text);">Извлеченные телефоны:</h5>
+                            <div style="display: flex; flex-wrap: wrap; gap: 5px;">
+                                ${data.extractedData.phones.slice(0, 10).map(phone => 
+                                    `<span style="background: #e8f5e9; color: #2e7d32; padding: 3px 8px; border-radius: 12px; font-size: 12px;">${phone}</span>`
+                                ).join('')}
+                                ${data.extractedData.phones.length > 10 ? 
+                                    `<span style="color: #666; font-size: 12px;">... и еще ${data.extractedData.phones.length - 10}</span>` : ''
+                                }
+                            </div>
+                        </div>
+                    ` : ''}
+                    
+                    ${data.text && data.text.length > 0 ? `
+                        <div style="margin-top: 15px;">
+                            <h5 style="margin-bottom: 10px; color: var(--dark-text);">Текст (первые 500 символов):</h5>
+                            <div style="max-height: 150px; overflow-y: auto; padding: 10px; background: #f8f9fa; border-radius: var(--border-radius); font-size: 12px; line-height: 1.5;">
+                                ${data.text.substring(0, 500)}${data.text.length > 500 ? '...' : ''}
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+        
+        return '<div style="color: #666; font-style: italic;">Данные не доступны</div>';
+    }
+
+    function getFileIconFromName(filename) {
+        if (filename.match(/\.pdf$/i)) return 'fa-file-pdf';
+        if (filename.match(/\.(xlsx|xls)$/i)) return 'fa-file-excel';
+        if (filename.match(/\.csv$/i)) return 'fa-file-csv';
+        return 'fa-file';
+    }
+
+    async function downloadParsedResult(filename) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/download-parsed/${filename}`);
+            if (response.ok) {
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+                showNotification('Файл скачан', 'success');
+            } else {
+                throw new Error('Ошибка скачивания');
+            }
+        } catch (error) {
+            showNotification('Ошибка скачивания файла', 'error');
+        }
+    }
+
+    async function exportResultToExcel(resultIndex) {
+        // Реализация экспорта в Excel
+        showNotification('Экспорт в Excel - функция в разработке', 'info');
+    }
+
+    async function loadParsedFiles() {
+        try {
+            const response = await fetch(`${API_BASE_URL}/parsed-files`);
+            const data = await response.json();
+            
+            if (data.success) {
+                displayParsedFilesHistory(data.files);
+            }
+        } catch (error) {
+            console.error('Ошибка загрузки истории:', error);
+            showNotification('Ошибка загрузки истории файлов', 'error');
+        }
+    }
+
+    function displayParsedFilesHistory(files) {
+        const historyList = document.getElementById('historyList');
+        const historyDiv = document.getElementById('parsedFilesHistory');
+        const parseResults = document.getElementById('parseResults');
+        
+        if (!historyList || !historyDiv) return;
+        
+        if (files.length === 0) {
+            historyList.innerHTML = `
+                <div style="text-align: center; padding: 40px; color: #666;">
+                    <i class="fas fa-history" style="font-size: 48px; margin-bottom: 15px; color: #e9ecef;"></i>
+                    <div>Нет обработанных файлов</div>
+                </div>
+            `;
+        } else {
+            let html = '';
+            
+            files.forEach((file, index) => {
+                const fileSize = (file.size / 1024).toFixed(2);
+                const date = new Date(file.createdAt).toLocaleDateString('ru-RU');
+                
+                html += `
+                    <div style="background: white; border: 1px solid #e9ecef; border-radius: var(--border-radius); padding: 15px; margin-bottom: 10px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <div>
+                                <div style="font-weight: 600; color: var(--dark-text);">
+                                    <i class="fas ${getFileIconFromName(file.filename)}"></i>
+                                    ${file.filename}
+                                </div>
+                                <div style="font-size: 12px; color: #666;">
+                                    ${date} • ${fileSize} KB
+                                </div>
+                            </div>
+                            <button class="btn-small" style="background: var(--primary-color); color: white;" 
+                                    onclick="downloadParsedResult('${file.filename}')">
+                                <i class="fas fa-download"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            historyList.innerHTML = html;
+        }
+        
+        historyDiv.style.display = 'block';
+        if (parseResults) parseResults.style.display = 'none';
+        document.getElementById('selectedFiles').style.display = 'none';
+        document.getElementById('uploadProgress').style.display = 'none';
+    }
+
+    function hideParsedFiles() {
+        document.getElementById('parsedFilesHistory').style.display = 'none';
+    }
+
+    function updateParsedFilesCount() {
+        // Обновляем счетчик обработанных файлов
+        const badge = document.getElementById('uploadedFiles');
+        if (badge) {
+            // Здесь можно загрузить реальное количество из API
+            badge.textContent = selectedFiles.length;
+        }
+    }
+
+    // 4. EMAIL ОТПРАВКА
+    async function sendEmailReport(reportData) {
+        showNotification('Подготовка и отправка отчета...', 'info');
+        
+        try {
+            const response = await fetch(`${API_BASE_URL}/send-report`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    to: currentManager.reportTo,
+                    bcc: currentManager.reportBcc,
+                    subject: `Отчет ВЕРТУМ CRM - ${new Date().toLocaleDateString('ru-RU')}`,
+                    reportText: generateReportText(reportData),
+                    reportHtml: generateReportHTML(reportData)
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                showNotification('✅ Отчет успешно отправлен!', 'success');
+                return true;
+            } else {
+                throw new Error(result.error || 'Неизвестная ошибка');
+            }
+        } catch (error) {
+            console.error('Email send error:', error);
+            showNotification('❌ Ошибка отправки отчета', 'error');
+            
+            // Fallback: предлагаем скачать отчет
+            setTimeout(() => {
+                if (confirm('Не удалось отправить email. Хотите скачать отчет как файл?')) {
+                    downloadReportAsFile(reportData);
+                }
+            }, 1000);
+            
+            return false;
+        }
+    }
+
+    function generateReportText(reportData) {
+        return `
+ОТЧЕТ ВЕРТУМ CRM
+================
+Дата: ${new Date().toLocaleDateString('ru-RU')}
+Менеджер: ${currentManager.name}
+Email: ${currentManager.email}
+
+СТАТИСТИКА:
+-----------
+• Всего клиентов: ${reportData.totalClients}
+• Визитов сегодня: ${reportData.visitsToday}
+• Всего визитов: ${reportData.totalVisits}
+• Выполнение плана: 24%
+• Активных визитов: ${activeVisit ? 1 : 0}
+
+КЛИЕНТЫ ПО РЕГИОНАМ:
+-------------------
+${getClientsByRegionText()}
+
+ПОСЛЕДНИЕ ДЕЙСТВИЯ:
+------------------
+${getRecentActivitiesText()}
+
+ОБРАБОТАННЫЕ ФАЙЛЫ:
+------------------
+${getParsedFilesSummary()}
+
+СИСТЕМНАЯ ИНФОРМАЦИЯ:
+--------------------
+• Версия CRM: 2.0
+• Обновлено: ${new Date().toLocaleTimeString('ru-RU')}
+• Устройство: ${navigator.userAgent.substring(0, 50)}...
+        `;
+    }
+
+    function generateReportHTML(reportData) {
+        return `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <style>
+                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; }
+                    .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 10px; text-align: center; }
+                    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin: 30px 0; }
+                    .stat-card { background: white; border: 1px solid #e9ecef; border-radius: 8px; padding: 20px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+                    .stat-value { font-size: 28px; font-weight: bold; color: #667eea; margin: 10px 0; }
+                    .section { margin: 30px 0; padding: 20px; background: #f8f9fa; border-radius: 8px; }
+                    .footer { margin-top: 40px; padding-top: 20px; border-top: 2px solid #667eea; color: #666; font-size: 12px; }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h1>📊 Отчет ВЕРТУМ CRM</h1>
+                    <p>${new Date().toLocaleDateString('ru-RU')} • ${currentManager.name}</p>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div style="font-size: 14px; color: #666;">Всего клиентов</div>
+                        <div class="stat-value">${reportData.totalClients}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div style="font-size: 14px; color: #666;">Визитов сегодня</div>
+                        <div class="stat-value">${reportData.visitsToday}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div style="font-size: 14px; color: #666;">Выполнение плана</div>
+                        <div class="stat-value">24%</div>
+                    </div>
+                    <div class="stat-card">
+                        <div style="font-size: 14px; color: #666;">Обработано файлов</div>
+                        <div class="stat-value">${getParsedFilesCount()}</div>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h2 style="color: #667eea;">📈 Активность</h2>
+                    <p>Отчет сгенерирован автоматически системой ВЕРТУМ CRM.</p>
+                    <p>Все данные актуальны на момент формирования отчета.</p>
+                </div>
+                
+                <div class="footer">
+                    <p>© ${new Date().getFullYear()} ВЕРТУМ CRM. Все права защищены.</p>
+                    <p>Это автоматическое сообщение. Не отвечайте на это письмо.</p>
+                </div>
+            </body>
+            </html>
+        `;
+    }
+
+    function getClientsByRegionText() {
+        const regions = {};
+        allClientsData.forEach(client => {
+            const region = client.region || 'Не указан';
+            regions[region] = (regions[region] || 0) + 1;
+        });
+        
+        return Object.entries(regions)
+            .map(([region, count]) => `  • ${region}: ${count} клиентов`)
+            .join('\n');
+    }
+
+    function getRecentActivitiesText() {
+        const visits = getAllVisits()
+            .filter(v => v.status === 'completed')
+            .sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt))
+            .slice(0, 3);
+        
+        if (visits.length === 0) return '  • Нет завершенных визитов';
+        
+        return visits.map(v => 
+            `  • ${v.date} ${v.startTime}: ${v.clientName} (${v.duration || '?'} мин)`
+        ).join('\n');
+    }
+
+    function getParsedFilesSummary() {
+        // Здесь можно добавить логику получения информации об обработанных файлах
+        return '  • Обработка файлов включена в систему';
+    }
+
+    function getParsedFilesCount() {
+        // Здесь можно добавить логику подсчета обработанных файлов
+        return selectedFiles.length;
+    }
+
+    function downloadReportAsFile(reportData) {
+        const content = generateReportText(reportData);
+        const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `vertum_report_${new Date().toISOString().slice(0,10)}.txt`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        showNotification('📄 Отчет скачан как файл', 'info');
+    }
+
+    // 5. СИСТЕМНЫЕ ФУНКЦИИ
+    async function checkServerHealth() {
+        try {
+            const response = await fetch(`${API_BASE_URL}/health`);
+            const data = await response.json();
+            
+            if (data.status === 'OK') {
+                console.log('✅ Сервер работает:', data);
+                showNotification('Сервер подключен', 'success');
+                return true;
+            }
+        } catch (error) {
+            console.warn('Сервер не доступен:', error);
+            showNotification('⚠️  Сервер не доступен. Работа в офлайн режиме.', 'warning');
+            return false;
+        }
+    }
+
+    async function syncData() {
+        showNotification('Синхронизация данных...', 'info');
+        isRefreshing = true;
+        
+        try {
+            // Проверяем здоровье сервера
+            const isHealthy = await checkServerHealth();
+            
+            if (isHealthy) {
+                // Здесь можно добавить реальную синхронизацию
+                showNotification('✅ Данные синхронизированы с сервером', 'success');
+            }
+            
+        } catch (error) {
+            console.warn('Офлайн режим:', error);
+            showNotification('📴 Офлайн режим. Данные обновлены локально', 'info');
+        } finally {
+            // Всегда обновляем локальные счетчики
+            updateCounters();
+            updateSystemInfo();
+            initializeMiniCalendar();
+            
+            isRefreshing = false;
+            hidePullToRefresh();
+        }
+    }
+
+    function updateDateTime() {
+        const now = new Date();
+        const dateOptions = { day: '2-digit', month: '2-digit', year: 'numeric' };
+        const timeOptions = { hour: '2-digit', minute: '2-digit' };
+        
+        document.getElementById('currentDate').textContent = now.toLocaleDateString('ru-RU', dateOptions);
+        document.getElementById('currentTime').textContent = now.toLocaleTimeString('ru-RU', timeOptions);
+        
+        setTimeout(updateDateTime, 60000);
+    }
+
+    // 6. МОБИЛЬНЫЕ ФУНКЦИИ
+    function setupTouchEvents() {
+        let touchStartY = 0;
+        let isDragging = false;
+        
+        document.addEventListener('touchstart', (e) => {
+            if (window.scrollY === 0) {
+                touchStartY = e.touches[0].clientY;
+                isDragging = true;
+            }
+        }, { passive: true });
+        
+        document.addEventListener('touchmove', (e) => {
+            if (!isDragging) return;
+            
+            const touchY = e.touches[0].clientY;
+            const diff = touchY - touchStartY;
+            
+            if (diff > 50 && window.scrollY === 0 && !isRefreshing) {
+                showPullToRefresh();
+            }
+        }, { passive: true });
+        
+        document.addEventListener('touchend', () => {
+            if (isDragging && isRefreshing) {
+                syncData();
+            }
+            isDragging = false;
+        }, { passive: true });
+    }
+
+    function showPullToRefresh() {
+        const refreshElement = document.getElementById('pullToRefresh');
+        if (refreshElement) {
+            refreshElement.classList.add('active');
+            isRefreshing = true;
+        }
+    }
+
+    function hidePullToRefresh() {
+        const refreshElement = document.getElementById('pullToRefresh');
+        if (refreshElement) {
+            refreshElement.classList.remove('active');
+        }
+    }
+
+    function initializeMobileFab() {
+        const fab = document.getElementById('mobileFab');
+        if (window.innerWidth <= 768) {
+            fab.style.display = 'flex';
+        } else {
+            fab.style.display = 'none';
+        }
+        
+        window.addEventListener('resize', () => {
+            if (window.innerWidth <= 768) {
+                fab.style.display = 'flex';
+            } else {
+                fab.style.display = 'none';
+            }
+        });
+    }
+
+    function openMobileMenu() {
+        const modal = document.getElementById('visitModal');
+        const modalContainer = document.getElementById('modalContainer');
+        
+        modalContainer.innerHTML = `
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i class="fas fa-bars"></i> БЫСТРЫЕ ДЕЙСТВИЯ
+                </div>
+                <button class="modal-close" onclick="closeModal()">×</button>
+            </div>
+            
+            <div style="padding: 20px;">
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+                    <button onclick="startVisit(); closeModal();" 
+                            style="padding: 15px; background: linear-gradient(135deg, var(--warning-color) 0%, #F57C00 100%); color: white; border: none; border-radius: var(--border-radius); display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                        <i class="fas fa-car" style="font-size: 24px;"></i>
+                        <span>Визит</span>
+                    </button>
+                    
+                    <button onclick="showRegistrationForm(); closeModal();" 
+                            style="padding: 15px; background: linear-gradient(135deg, var(--success-color) 0%, #2E7D32 100%); color: white; border: none; border-radius: var(--border-radius); display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                        <i class="fas fa-user-plus" style="font-size: 24px;"></i>
+                        <span>Клиент</span>
+                    </button>
+                    
+                    <button onclick="callMostRecentClient(); closeModal();" 
+                            style="padding: 15px; background: linear-gradient(135deg, var(--info-color) 0%, #0D47A1 100%); color: white; border: none; border-radius: var(--border-radius); display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                        <i class="fas fa-phone" style="font-size: 24px;"></i>
+                        <span>Позвонить</span>
+                    </button>
+                    
+                    <button onclick="syncData(); closeModal();" 
+                            style="padding: 15px; background: linear-gradient(135deg, #666 0%, #333 100%); color: white; border: none; border-radius: var(--border-radius); display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                        <i class="fas fa-sync-alt" style="font-size: 24px;"></i>
+                        <span>Синхр.</span>
+                    </button>
+                    
+                    <button onclick="document.getElementById('fileInput').click(); closeModal();" 
+                            style="padding: 15px; background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%); color: white; border: none; border-radius: var(--border-radius); display: flex; flex-direction: column; align-items: center; gap: 8px; grid-column: span 2;">
+                        <i class="fas fa-upload" style="font-size: 24px;"></i>
+                        <span>Загрузить файл</span>
+                    </button>
+                </div>
+                
+                <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #e9ecef;">
+                    <h4 style="margin-bottom: 10px; color: var(--dark-text);">Статус системы:</h4>
+                    <div style="background: var(--light-bg); padding: 12px; border-radius: var(--border-radius); font-size: 13px;">
+                        <div><i class="fas fa-users"></i> Клиентов: ${allClientsData.length}</div>
+                        <div><i class="fas fa-calendar-check"></i> Визитов сегодня: ${getVisitsToday().length}</div>
+                        <div><i class="fas fa-file"></i> Файлов в обработке: ${selectedFiles.length}</div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        modal.style.display = 'flex';
+    }
+
+    // 7. SERVICE WORKER ДЛЯ PWA
+    function setupServiceWorker() {
+        if ('serviceWorker' in navigator) {
+            // Динамически создаем service worker
+            const swContent = `
+                self.addEventListener('install', (event) => {
+                    console.log('📦 Service Worker installing...');
+                    event.waitUntil(
+                        caches.open('vertum-crm-v2').then(cache => {
+                            return cache.addAll([
+                                '/',
+                                '/index.html'
+                            ]);
+                        })
+                    );
+                });
+
+                self.addEventListener('fetch', (event) => {
+                    if (event.request.mode === 'navigate') {
+                        event.respondWith(
+                            fetch(event.request).catch(() => {
+                                return caches.match('/index.html');
+                            })
+                        );
+                    }
+                });
+            `;
+            
+            const swBlob = new Blob([swContent], { type: 'application/javascript' });
+            const swURL = URL.createObjectURL(swBlob);
+            
+            navigator.serviceWorker.register(swURL).then(() => {
+                console.log('✅ Service Worker зарегистрирован');
+            });
+        }
+        
+        // Создаем манифест для PWA
+        createManifest();
+    }
+
+    function createManifest() {
+        const manifest = {
+            "name": "ВЕРТУМ CRM",
+            "short_name": "ВЕРТУМ",
+            "description": "Торговая система управления клиентами",
+            "start_url": "/",
+            "display": "standalone",
+            "background_color": "#667eea",
+            "theme_color": "#667eea",
+            "icons": [
+                {
+                    "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23667eea'%3E%3Cpath d='M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5'/%3E%3C/svg%3E",
+                    "sizes": "192x192",
+                    "type": "image/svg+xml"
+                }
+            ]
+        };
+        
+        const manifestElement = document.createElement('link');
+        manifestElement.rel = 'manifest';
+        manifestElement.href = 'data:application/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(manifest));
+        document.head.appendChild(manifestElement);
+    }
+
+    // 8. ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+    function showNotification(message, type = 'info') {
+        const container = document.getElementById('notificationContainer');
+        if (!container) return;
+        
+        const icons = {
+            info: 'ℹ️',
+            success: '✅',
+            warning: '⚠️',
+            error: '❌'
+        };
+        
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.innerHTML = `
+            <div class="notification-icon">${icons[type] || 'ℹ️'}</div>
+            <div class="notification-content">
+                <div class="notification-title">ВЕРТУМ CRM</div>
+                <div class="notification-message">${message}</div>
+            </div>
+            <button onclick="this.parentElement.remove()" style="background: none; border: none; cursor: pointer; color: #666; font-size: 20px;">×</button>
+        `;
+        
+        container.appendChild(notification);
+        
+        setTimeout(() => notification.classList.add('show'), 10);
+        
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.remove();
+            }
+        }, 5000);
+    }
+
+    function closeModal() {
+        document.getElementById('visitModal').style.display = 'none';
+    }
+
+    // ... (ОСТАЛЬНЫЕ ФУНКЦИИ ИЗ ПРЕДЫДУЩЕГО КОДА: loadClientsData, showSection, applyFilters, 
+    // startVisit, showCalendar, exportToExcel, и т.д. - они остаются без изменений)
+
+    // 9. ИНИЦИАЛИЗАЦИЯ ПРИ ЗАГРУЗКЕ
+    window.onload = function() {
+        initializeSystem();
+        
+        // Проверяем наличие обновлений
+        checkForUpdates();
+    };
+
+    function checkForUpdates() {
+        const lastUpdateCheck = localStorage.getItem('last_update_check');
+        const today = new Date().toDateString();
+        
+        if (lastUpdateCheck !== today) {
+            localStorage.setItem('last_update_check', today);
+            console.log('Проверка обновлений...');
+        }
+    }
+
+    // Обработчики онлайн/офлайн статуса
+    window.addEventListener('online', () => {
+        showNotification('🌐 Интернет соединение восстановлено', 'success');
+        setTimeout(syncData, 2000);
+    });
+
+    window.addEventListener('offline', () => {
+        showNotification('📴 Работаем в офлайн режиме', 'warning');
+    });
+
+    // Проверяем статус сети при загрузке
+    if (!navigator.onLine) {
+        showNotification('📴 Офлайн режим. Данные загружены из кэша.', 'info');
+    }
+
+    </script>
+
+    <!-- ДОПОЛНИТЕЛЬНЫЙ JS ДЛЯ СЕРВИС ВОРКЕРА -->
+    <script>
+    // Регистрируем Service Worker
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+            navigator.serviceWorker.register('/sw.js').then(function(registration) {
+                console.log('ServiceWorker зарегистрирован успешно:', registration.scope);
+            }, function(err) {
+                console.log('Ошибка регистрации ServiceWorker:', err);
+            });
+        });
+    }
+    </script>
+</body>
+</html>

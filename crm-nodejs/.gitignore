@@ -1,0 +1,35 @@
+﻿# Зависимости
+node_modules/
+npm-debug.log*
+
+# Environment
+.env
+*.env.local
+*.env.*.local
+
+# Backup files
+*.backup
+*.backup*
+*_backup*
+*backup*
+
+# System
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Temp files
+*-1
+pablic.txt
+sendEmailReport_fixed.js
+
+*.xlsx
+*.xls
+
+uploads/
+public/excel/*.xlsx
