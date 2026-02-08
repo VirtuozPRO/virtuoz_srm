@@ -1,241 +1,309 @@
-п»їrequire('dotenv').config();
+// ================================================
+// CRM СЕРВЕР ДЛЯ RENDER.COM
+// ================================================
 
-const express = require("express");
-const cors = require("cors");
-const path = require("path");
-const fs = require("fs");
-const nodemailer = require('nodemailer');
-const multer = require('multer');
+const express = require('express');
+const path = require('path');
+const fs = require('fs');
 const XLSX = require('xlsx');
-const PDFParser = require('pdf-parse');
+const nodemailer = require('nodemailer');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ========== MIDDLEWARE ==========
-app.use(cors());
+// Middleware
 app.use(express.json());
-app.use(express.static(path.join(__dirname, "public")));
 app.use(express.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname, 'public')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/scenarios', express.static(path.join(__dirname, 'scenarios')));
 
-// ========== РќРђРЎРўР РћР™РљРђ Р—РђР“Р РЈР—РљР Р¤РђР™Р›РћР’ ==========
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        const uploadDir = path.join(__dirname, "uploads");
-        if (!fs.existsSync(uploadDir)) {
-            fs.mkdirSync(uploadDir, { recursive: true });
-        }
-        cb(null, uploadDir);
-    },
-    filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-    }
+// ==================== РОУТЫ CRM ====================
+
+// 1. Главная страница CRM
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-const upload = multer({ 
-    storage: storage,
-    limits: { fileSize: 50 * 1024 * 1024 },
-    fileFilter: (req, file, cb) => {
-        const allowedTypes = [
-            'application/vnd.ms-excel',
-            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            'application/pdf',
-            'text/csv',
-            'application/vnd.oasis.opendocument.spreadsheet'
-        ];
+// 2. Страница торговых представителей
+app.get('/tp', (req, res) => {
+    const html = `
+    <!DOCTYPE html>
+    <html lang="ru">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>CRM - Торговые представители</title>
+        <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            .dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+            .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+            .btn { display: inline-block; padding: 10px 20px; background: #3498db; color: white; text-decoration: none; border-radius: 5px; margin: 5px; }
+            .btn:hover { background: #2980b9; }
+        </style>
+    </head>
+    <body>
+        <h1>?? CRM - Торговые представители</h1>
+        <p>Версия: 2.0 | Развернуто на Render.com</p>
         
-        if (allowedTypes.includes(file.mimetype)) {
-            cb(null, true);
-        } else {
-            cb(new Error('РќРµРїРѕРґРґРµСЂР¶РёРІР°РµРјС‹Р№ С‚РёРї С„Р°Р№Р»Р°'));
-        }
-    }
+        <div class="dashboard">
+            <div class="card">
+                <h2>?? Хитров Кирилл</h2>
+                <p>Управление клиентами и отчетами</p>
+                <a href="/tp/hitrov" class="btn">?? Клиенты</a>
+                <a href="/uploads/hitrov_report.html" class="btn">?? Отчет</a>
+                <a href="/api/tp/hitrov/json" class="btn">?? JSON данные</a>
+            </div>
+            
+            <div class="card">
+                <h2>?? Хисматуллин Рустам</h2>
+                <p>Управление клиентами и отчетами</p>
+                <a href="/tp/hismatullin" class="btn">?? Клиенты</a>
+                <a href="/uploads/hismatullin_report.html" class="btn">?? Отчет</a>
+                <a href="/api/tp/hismatullin/json" class="btn">?? JSON данные</a>
+            </div>
+            
+            <div class="card">
+                <h2>?? Аналитика</h2>
+                <p>Сводные отчеты и статистика</p>
+                <a href="/uploads/tp_summary.html" class="btn">?? Сводный отчет</a>
+                <a href="/api/tp/analyze" class="btn">?? Анализ</a>
+                <a href="/api/tp/update" class="btn">?? Обновить данные</a>
+            </div>
+            
+            <div class="card">
+                <h2>?? Администрирование</h2>
+                <p>Управление системой</p>
+                <a href="/admin" class="btn">?? Панель управления</a>
+                <a href="/api/tp/export/excel" class="btn">?? Экспорт в Excel</a>
+                <a href="/api/tp/email/report" class="btn">?? Отправить отчет</a>
+            </div>
+        </div>
+        
+        <h2>?? Быстрые действия</h2>
+        <div>
+            <button onclick="analyzeData()" class="btn">?? Проанализировать данные</button>
+            <button onclick="createReports()" class="btn">?? Создать отчеты</button>
+            <button onclick="updateFromExcel()" class="btn">?? Обновить из Excel</button>
+        </div>
+        
+        <script>
+            async function analyzeData() {
+                const response = await fetch('/api/tp/analyze');
+                const data = await response.json();
+                alert('Анализ завершен: ' + data.message);
+            }
+            
+            async function createReports() {
+                const response = await fetch('/api/tp/reports/create');
+                const data = await response.json();
+                alert('Отчеты созданы: ' + data.message);
+            }
+            
+            async function updateFromExcel() {
+                const response = await fetch('/api/tp/update');
+                const data = await response.json();
+                alert('Данные обновлены: ' + data.message);
+            }
+        </script>
+    </body>
+    </html>
+    `;
+    res.send(html);
 });
 
-// ========== РљРћРќР¤РР“РЈР РђР¦РРЇ РџРћР§РўР« ==========
-const emailConfig = {
-    host: process.env.EMAIL_HOST || 'smtp.yandex.ru',
-    port: parseInt(process.env.EMAIL_PORT) || 465,
-    secure: process.env.EMAIL_SECURE === 'true',
-    auth: {
-        user: process.env.EMAIL_USER || '',
-        pass: process.env.EMAIL_PASSWORD || ''
-    }
-};
-
-const isEmailConfigured = () => {
-    return emailConfig.auth.user && emailConfig.auth.pass;
-};
-
-// ========== Р¤РЈРќРљР¦РР РџРђР РЎРРќР“Рђ ==========
-const parseExcelFile = (filePath) => {
+// 3. API для торговых представителей
+app.get('/api/tp/analyze', async (req, res) => {
     try {
-        const workbook = XLSX.readFile(filePath);
-        return { success: true, data: { sheets: workbook.SheetNames.length } };
-    } catch (error) {
-        return { success: false, error: error.message };
-    }
-};
-
-const parsePdfFile = async (filePath) => {
-    try {
-        const dataBuffer = fs.readFileSync(filePath);
-        const pdfData = await PDFParser(dataBuffer);
-        return { success: true, data: { pages: pdfData.numpages } };
-    } catch (error) {
-        return { success: false, error: error.message };
-    }
-};
-
-// ========== API РњРђР РЁР РЈРўР« ==========
-
-// Р“Р›РђР’РќРђРЇ РЎРўР РђРќРР¦Рђ
-app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname, "public", "index.html"));
-});
-
-// Health check
-app.get("/api/health", (req, res) => {
-    res.json({
-        status: "OK",
-        system: "Р’Р•Р РўРЈРњ CRM",
-        version: "2.2",
-        manager: "РҐРёСЃРјР°С‚СѓР»Р»РёРЅ Р .РЁ.",
-        emailConfigured: isEmailConfigured(),
-        fileParsing: "Р“РѕС‚РѕРІРѕ"
-    });
-});
-
-// Р—Р°РіСЂСѓР·РєР° С„Р°Р№Р»РѕРІ
-app.post("/api/parse-file", upload.single('file'), async (req, res) => {
-    try {
-        if (!req.file) {
-            return res.status(400).json({ success: false, error: "Р¤Р°Р№Р» РЅРµ Р·Р°РіСЂСѓР¶РµРЅ" });
+        const dataDir = path.join(__dirname, 'database');
+        const files = fs.readdirSync(dataDir).filter(f => f.endsWith('.xlsx'));
+        
+        if (files.length === 0) {
+            return res.json({ success: false, message: 'Excel файлы не найдены' });
         }
-
-        let result;
-        if (req.file.mimetype.includes('excel') || req.file.mimetype.includes('spreadsheet')) {
-            result = parseExcelFile(req.file.path);
-        } else if (req.file.mimetype.includes('pdf')) {
-            result = await parsePdfFile(req.file.path);
-        } else {
-            return res.status(400).json({ success: false, error: "РќРµРїРѕРґРґРµСЂР¶РёРІР°РµРјС‹Р№ С„РѕСЂРјР°С‚" });
-        }
-
+        
+        // Анализ данных
+        const analysis = await analyzeTPData();
+        
         res.json({
             success: true,
-            filename: req.file.originalname,
-            result: result
+            message: `Проанализировано ${files.length} файлов`,
+            data: analysis
         });
-
+        
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
     }
 });
 
-// ========== РћРўРџР РђР’РљРђ РћРўР§Р•РўРђ (РџР РђР’РР›Р¬РќР«Р™ РљРћР”) ==========
-app.post("/api/send-report", async (req, res) => {
-    console.log("рџ“§ API send-report РІС‹Р·РІР°РЅ");
-    
+// 4. API для получения данных Хитрова
+app.get('/api/tp/hitrov/json', (req, res) => {
     try {
-        const { managerEmail, subject, reportText } = req.body;
+        const scenarioPath = path.join(__dirname, 'scenarios', 'hitrov_scenario.json');
+        
+        if (fs.existsSync(scenarioPath)) {
+            const data = JSON.parse(fs.readFileSync(scenarioPath, 'utf8'));
+            res.json({ success: true, data });
+        } else {
+            res.json({ success: false, message: 'Сценарий Хитрова не найден' });
+        }
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
 
-        if (!isEmailConfigured()) {
-            console.log("вќЊ РџРѕС‡С‚Р° РЅРµ РЅР°СЃС‚СЂРѕРµРЅР°");
+// 5. API для получения данных Хисматуллина
+app.get('/api/tp/hismatullin/json', (req, res) => {
+    try {
+        const scenarioPath = path.join(__dirname, 'scenarios', 'hismatullin_scenario.json');
+        
+        if (fs.existsSync(scenarioPath)) {
+            const data = JSON.parse(fs.readFileSync(scenarioPath, 'utf8'));
+            res.json({ success: true, data });
+        } else {
+            res.json({ success: false, message: 'Сценарий Хисматуллина не найден' });
+        }
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// 6. API для создания отчетов
+app.get('/api/tp/reports/create', async (req, res) => {
+    try {
+        // Запускаем создание отчетов
+        const { exec } = require('child_process');
+        const scriptPath = path.join(__dirname, 'ai-agent', 'integrate-to-crm.js');
+        
+        exec(`node "${scriptPath}"`, (error, stdout, stderr) => {
+            if (error) {
+                return res.json({ success: false, error: error.message });
+            }
+            
+            res.json({
+                success: true,
+                message: 'Отчеты успешно созданы',
+                output: stdout
+            });
+        });
+        
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// 7. API для отправки email отчетов
+app.get('/api/tp/email/report', async (req, res) => {
+    try {
+        const email = req.query.email || process.env.EMAIL_USER;
+        
+        if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
             return res.json({ 
                 success: false, 
-                message: "Email РЅРµ РЅР°СЃС‚СЂРѕРµРЅ РІ СЃРёСЃС‚РµРјРµ" 
+                message: 'Email не настроен. Добавьте переменные в Render Dashboard' 
             });
         }
-
-        console.log("вњ… РџРѕС‡С‚Р° РЅР°СЃС‚СЂРѕРµРЅР°");
-        console.log("рџ“Ё РњРµРЅРµРґР¶РµСЂ email:", managerEmail || 'РЅРµ СѓРєР°Р·Р°РЅ');
-        console.log("рџ“ќ РўРµРјР°:", subject || 'РЅРµ СѓРєР°Р·Р°РЅР°');
         
-        const transporter = nodemailer.createTransport(emailConfig);
-        
-        // РћРџР Р•Р”Р•Р›РЇР•Рњ РђР”Р Р•РЎРђ Р”Р›РЇ РћРўРџР РђР’РљР
-        let toAddresses;
-        
-        if (managerEmail === 'hky@vertum.su') {
-            // РҐРёС‚СЂРѕРІ РљРёСЂРёР»Р» Р®СЂСЊРµРІРёС‡
-            toAddresses = 'hky@vertum.su, ddn@vertum.su';
-            console.log("рџ‘¤ РћС‚РїСЂР°РІРєР° РґР»СЏ РҐРёС‚СЂРѕРІР°");
-        } else {
-            // РџРѕ СѓРјРѕР»С‡Р°РЅРёСЋ: РҐРёСЃРјР°С‚СѓР»Р»РёРЅ Р СѓСЃС‚Р°Рј РЁР°С„РєР°С‚РѕРІРёС‡
-            toAddresses = 'hrs@vertum.su, ddn@vertum.su';
-            console.log("рџ‘¤ РћС‚РїСЂР°РІРєР° РґР»СЏ РҐРёСЃРјР°С‚СѓР»Р»РёРЅР°");
-        }
+        const transporter = nodemailer.createTransport({
+            host: process.env.EMAIL_HOST || 'smtp.yandex.ru',
+            port: parseInt(process.env.EMAIL_PORT) || 465,
+            secure: process.env.EMAIL_SECURE === 'true',
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASSWORD
+            }
+        });
         
         const mailOptions = {
-            from: `"VERTUM CRM" <${emailConfig.auth.user}>`,
-            to: toAddresses,
-            subject: subject || "РћС‚С‡РµС‚ CRM",
-            text: reportText || "РћС‚С‡РµС‚ СЃРіРµРЅРµСЂРёСЂРѕРІР°РЅ Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРё",
-            html: `<div style="font-family: Arial, sans-serif;">
-                     <h2>${subject || "РћС‚С‡РµС‚ CRM"}</h2>
-                     <pre style="white-space: pre-wrap;">${reportText || "РћС‚С‡РµС‚ CRM"}</pre>
-                     <hr>
-                     <p><small>РћС‚РїСЂР°РІР»РµРЅРѕ РёР· VERTUM CRM</small></p>
-                   </div>`
+            from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
+            to: email,
+            subject: '?? Отчет по торговым представителям CRM',
+            text: 'Отчет по торговым представителям прикреплен к письму.',
+            html: `
+                <h1>?? Отчет CRM</h1>
+                <p>Отчет по торговым представителям создан: ${new Date().toLocaleString()}</p>
+                <p>Ссылки на отчеты:</p>
+                <ul>
+                    <li><a href="https://${req.headers.host}/uploads/tp_summary.html">Сводный отчет</a></li>
+                    <li><a href="https://${req.headers.host}/uploads/hitrov_report.html">Отчет Хитрова</a></li>
+                    <li><a href="https://${req.headers.host}/uploads/hismatullin_report.html">Отчет Хисматуллина</a></li>
+                </ul>
+            `
         };
-
-        console.log("рџ“¤ РћС‚РїСЂР°РІРєР° РїРёСЃСЊРјР° РЅР° Р°РґСЂРµСЃР°:", toAddresses);
-
-        const info = await transporter.sendMail(mailOptions);
         
-        console.log("вњ… РџРёСЃСЊРјРѕ РѕС‚РїСЂР°РІР»РµРЅРѕ СѓСЃРїРµС€РЅРѕ!");
-        console.log("рџ“« ID СЃРѕРѕР±С‰РµРЅРёСЏ:", info.messageId);
-        console.log("рџ”Ќ РћС‚РІРµС‚ СЃРµСЂРІРµСЂР°:", info.response);
+        await transporter.sendMail(mailOptions);
         
-        res.json({ 
-            success: true, 
-            messageId: info.messageId,
-            message: `РћС‚С‡РµС‚ РѕС‚РїСЂР°РІР»РµРЅ РЅР° Р°РґСЂРµСЃР°: ${toAddresses}`,
-            recipients: toAddresses.split(', ')
+        res.json({
+            success: true,
+            message: `Отчет отправлен на ${email}`
         });
-
+        
     } catch (error) {
-        console.error("вќЊ РћС€РёР±РєР° РѕС‚РїСЂР°РІРєРё:", error);
-        console.error("рџ”§ Р”РµС‚Р°Р»Рё РѕС€РёР±РєРё:", {
-            code: error.code,
-            command: error.command,
-            message: error.message
-        });
-        
-        res.status(500).json({ 
-            success: false, 
-            error: error.message,
-            code: error.code,
-            details: "РћС€РёР±РєР° РѕС‚РїСЂР°РІРєРё email"
-        });
+        res.status(500).json({ success: false, error: error.message });
     }
 });
 
-// ========== SEGMENTS API INTEGRATION ==========
-const segmentsRouter = require('./api/segments');
-app.use('/api/segments', segmentsRouter);
+// ==================== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ====================
 
-// ========== РЎРўРђР Рў РЎР•Р Р’Р•Р Рђ ==========
-app.listen(PORT, () => {
-    console.log("========================================");
-    console.log("рџљЂ Р’Р•Р РўРЈРњ CRM Р—РђРџРЈР©Р•Рќ");
-    console.log(`рџ“Ќ РџРѕСЂС‚: ${PORT}`);
-    console.log(`рџ“Ќ РЎСЃС‹Р»РєР°: http://localhost:${PORT}`);
-    console.log(`рџ“Ќ API: http://localhost:${PORT}/api/health`);
-    console.log(`рџ“Ќ Email: ${isEmailConfigured() ? 'вњ… РќР°СЃС‚СЂРѕРµРЅ' : 'вќЊ РќРµ РЅР°СЃС‚СЂРѕРµРЅ'}`);
-    if (isEmailConfigured()) {
-        console.log(`рџ“Ќ РџРѕС‡С‚РѕРІС‹Р№ СЃРµСЂРІРµСЂ: ${emailConfig.host}:${emailConfig.port}`);
-        console.log(`рџ“Ќ РћС‚РїСЂР°РІРєР° СЃ: ${emailConfig.auth.user}`);
+async function analyzeTPData() {
+    const dataDir = path.join(__dirname, 'database');
+    const files = fs.readdirSync(dataDir).filter(f => f.includes('tp_tables_') && f.endsWith('.xlsx'));
+    
+    if (files.length === 0) {
+        return { message: 'Таблицы не найдены' };
     }
-    console.log("========================================");
+    
+    const latestFile = files.sort().reverse()[0];
+    const filePath = path.join(dataDir, latestFile);
+    const workbook = XLSX.readFile(filePath);
+    
+    const analysis = {
+        file: latestFile,
+        sheets: workbook.SheetNames,
+        stats: {}
+    };
+    
+    workbook.SheetNames.forEach(sheetName => {
+        const worksheet = workbook.Sheets[sheetName];
+        const data = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
+        analysis.stats[sheetName] = {
+            clients: data.length,
+            columns: Object.keys(data[0] || {}).length
+        };
+    });
+    
+    return analysis;
+}
 
-    // РЎРѕР·РґР°РµРј РїР°РїРєРё
-    ["uploads", "uploads/reports", "uploads/parsed"].forEach(folder => {
-        const fullPath = path.join(__dirname, folder);
-        if (!fs.existsSync(fullPath)) {
-            fs.mkdirSync(fullPath, { recursive: true });
-        }
+// ==================== ЗАПУСК СЕРВЕРА ====================
+
+app.listen(PORT, () => {
+    console.log(`
+    ?? CRM СИСТЕМА ЗАПУЩЕНА НА RENDER!
+    ====================================
+    ?? Порт: ${PORT}
+    ?? Ссылка: https://vertum-crm.onrender.com
+    ?? Путь: ${__dirname}
+    ? Время: ${new Date().toLocaleString()}
+    ====================================
+    
+    Доступные роуты:
+    • /           - Главная страница CRM
+    • /tp         - Панель торговых представителей
+    • /api/tp/*   - API для работы с данными ТП
+    • /uploads/*  - HTML отчеты
+    • /scenarios/* - JSON сценарии
+    `);
+});
+
+// Обработка ошибок
+app.use((err, req, res, next) => {
+    console.error('? Ошибка сервера:', err.stack);
+    res.status(500).json({ 
+        success: false, 
+        error: 'Внутренняя ошибка сервера',
+        message: process.env.NODE_ENV === 'development' ? err.message : 'Обратитесь к администратору'
     });
 });
+
+module.exports = app;

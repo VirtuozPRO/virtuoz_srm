@@ -1,0 +1,32 @@
+{
+  "clients": [
+    {
+      "id": 1,
+      "name": "ООО Ромашка",
+      "email": "client1@example.com",
+      "phone": "+79161234567",
+      "city": "Москва"
+    },
+    {
+      "id": 2,
+      "name": "ИП Иванов",
+      "email": ""client2@example.com"",
+      "phone": "+79167654321",
+      "city": "Санкт-Петербург"
+    }
+  ],
+  "products": [
+    {
+      "id": 1,
+      "name": "Фасадная плитка HAUBERK",
+      "price": 1200,
+      "category": "фасад"
+    },
+    {
+      "id": 2,
+      "name": "Виниловый сайдинг",
+      "price": 350,
+      "category": "фасад"
+    }
+  ]
+}

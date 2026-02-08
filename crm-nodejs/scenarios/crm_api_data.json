@@ -1,0 +1,19 @@
+{
+  "timestamp": "2026-02-07T17:32:21.346Z",
+  "managers": [
+    {
+      "name": "Хитров Кирилл",
+      "clients": 191,
+      "activeClients": 152
+    },
+    {
+      "name": "Хисматуллин Рустам",
+      "clients": 187,
+      "activeClients": 156
+    }
+  ],
+  "summary": {
+    "totalClients": 378,
+    "activePercentage": "81.5"
+  }
+}
