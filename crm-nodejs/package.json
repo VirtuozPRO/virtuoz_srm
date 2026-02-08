@@ -1,28 +1,21 @@
-{
+ï»¿{
   "name": "vertum-crm",
   "version": "2.0.0",
-  "description": "CRM ñèñòåìà äëÿ òîðãîâûõ ïðåäñòàâèòåëåé",
+  "description": "CRM ÑÐ¸ÑÑ‚ÐµÐ¼Ð° Ð´Ð»Ñ Ñ‚Ð¾Ñ€Ð³Ð¾Ð²Ñ‹Ñ… Ð¿Ñ€ÐµÐ´ÑÑ‚Ð°Ð²Ð¸Ñ‚ÐµÐ»ÐµÐ¹",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js",
-    "analyze": "node ai-agent/display-tables.js",
-    "reports": "node ai-agent/integrate-to-crm.js",
-    "deploy": "git add . && git commit -m 'Deploy to Render' && git push"
+    "dev": "nodemon server.js"
   },
   "dependencies": {
     "express": "^4.18.2",
+    "dotenv": "^16.3.1",
+    "exceljs": "^4.4.0",
     "xlsx": "^0.18.5",
     "nodemailer": "^6.9.7",
-    "csv-parse": "^5.5.3",
-    "exceljs": "^4.4.0",
-    "mathjs": "^11.10.1",
-    "date-fns": "^2.30.0"
+    "cors": "^2.8.5"
   },
   "engines": {
     "node": ">=18.0.0"
-  },
-  "keywords": ["crm", "sales", "manager", "excel", "analysis"],
-  "author": "Vertum CRM Team",
-  "license": "MIT"
+  }
 }
